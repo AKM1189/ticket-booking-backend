@@ -49,7 +49,7 @@ export const refreshAccessToken = async (req: Request, res: Response) => {
   try {
     const refresh = req.cookies.refreshToken;
     if (!refresh) {
-      return res.status(401).json({ message: "No refresh token provided" });
+      res.status(401).json({ message: "No refresh token provided" });
     }
     const { accessToken, expiresIn } = await authService.refreshAccessToken(
       refresh,
@@ -73,6 +73,39 @@ export const getUserProfile = async (req: Request, res: Response) => {
       createdAt: user.createdAt,
       updatedAt: user.updatedAt,
     });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+export const forgotPasssword = async (req: Request, res: Response) => {
+  try {
+    const { email } = req.body;
+    const { message, resetToken } = await authService.forgotPasssword(email);
+    res.status(200).json({ message, resetToken });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+export const verifyOtp = async (req: Request, res: Response) => {
+  try {
+    const { token, otp } = req.body;
+    const { status, message } = await authService.verifyOtp(otp, token);
+    res.status(status).json({ message });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+export const resetPassword = async (req: Request, res: Response) => {
+  try {
+    const { password, token } = req.body;
+    const { status, message } = await authService.resetPassword(
+      password,
+      token,
+    );
+    res.status(status).json({ message });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }

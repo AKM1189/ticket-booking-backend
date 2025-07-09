@@ -1,0 +1,14 @@
+{
+  "title": "Venus",
+      "description": "This is Venus movies.",
+      "duration": "2hrs 30 mins",
+      "language": ["English", "Tamil"],
+      "subtitle": ["English"],
+      "releaseDate": "2022-6-10",
+      "status": "showing",
+      "posterUrl": "/akm.jpg",
+      "trailerId": null,
+      "photos": ["akm1.jpg", "akm2.jpg"],
+      "experience": ["2D", "3D"],
+      "genres": [1,2,3]
+}

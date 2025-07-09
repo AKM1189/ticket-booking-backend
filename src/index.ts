@@ -4,6 +4,8 @@ import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
 import authRoutes from "./routes/authRoutes";
+import movieRoutes from "./routes/movieRoutes";
+import genreRoutes from "./routes/genreRoutes";
 import cookieParser from "cookie-parser";
 dotenv.config();
 
@@ -20,7 +22,7 @@ AppDataSource.initialize()
     const app = express();
 
     const options = {
-      origin: "http://localhost:5173",
+      origin: "http://localhost:5175",
     };
 
     app.use(cors(options));
@@ -30,11 +32,12 @@ AppDataSource.initialize()
     app.use(cookieParser());
 
     app.use("/api/auth", authRoutes);
+    app.use("/api/user/", movieRoutes);
+    app.use("/api/user/", genreRoutes);
 
     app.listen(process.env.PORT, () => {
-      console.log(`Server is running on port ${process.env.PORT}`);
+      console.log(`Server is running on port ${process.env.PORT} `);
     });
-    console.log("Inserting a new user into the database...");
 
     // const user = new User()
     // user.firstName = "Timber"
