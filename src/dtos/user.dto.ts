@@ -8,6 +8,9 @@ export class CreateUserDto {
   email: string;
 
   @IsString()
+  role: string;
+
+  @IsString()
   @MinLength(6, { message: "Password must be at least 6 characters long" })
   @Matches(/(?=.*[0-9])/, {
     message: "Password must contain at least one number",

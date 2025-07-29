@@ -32,14 +32,19 @@ export class GenreService {
   }
 
   async addGenre(body: GenreType) {
-    const { name } = body;
+    const { name, description, color } = body;
 
     const existingGenre = await this.genreRepo.findOneBy({ name });
     if (existingGenre) {
       throw new Error("Genre already exists.");
     }
 
-    const newGenre = this.genreRepo.create({ name });
+    const newGenre = this.genreRepo.create({
+      name,
+      description,
+      movieCount: 0,
+      color,
+    });
 
     await this.genreRepo.save(newGenre);
     return {

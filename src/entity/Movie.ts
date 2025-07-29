@@ -5,6 +5,7 @@ import {
   OneToMany,
   ManyToMany,
   JoinTable,
+  Long,
 } from "typeorm";
 import { Genre } from "./Genre";
 
@@ -16,7 +17,7 @@ export class Movie {
   @Column({ unique: true })
   title: string;
 
-  @Column({ nullable: true })
+  @Column({ nullable: true, type: "longtext" })
   description: string;
 
   @Column()
@@ -34,7 +35,7 @@ export class Movie {
   @Column()
   status: string;
 
-  @Column()
+  @Column({ type: "text" })
   posterUrl: string;
 
   @Column({ nullable: true })

@@ -22,7 +22,8 @@ AppDataSource.initialize()
     const app = express();
 
     const options = {
-      origin: "http://localhost:5175",
+      origin: "http://localhost:5176",
+      credentials: true,
     };
 
     app.use(cors(options));
@@ -31,10 +32,9 @@ AppDataSource.initialize()
     app.use(express.urlencoded({ extended: false }));
     app.use(cookieParser());
 
-    app.use("/api/auth", authRoutes);
-    app.use("/api/user/", movieRoutes);
-    app.use("/api/user/", genreRoutes);
-
+    app.use("/api/auth/", authRoutes);
+    app.use("/api/admin/", movieRoutes);
+    app.use("/api/admin/", genreRoutes);
     app.listen(process.env.PORT, () => {
       console.log(`Server is running on port ${process.env.PORT} `);
     });

@@ -7,4 +7,13 @@ export class Genre {
 
   @Column()
   name: string;
+
+  @Column({ nullable: true, type: "longtext" })
+  description: string;
+
+  @Column()
+  movieCount: number;
+
+  @Column()
+  color: string;
 }

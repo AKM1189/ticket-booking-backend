@@ -4,13 +4,14 @@ import bcrypt from "bcrypt";
 import jwt, { JwtPayload } from "jsonwebtoken";
 import dotenv from "dotenv";
 import { sentResetEmail } from "../utils/sendEmail";
+import { LoginType } from "../types/AuthType";
 
 dotenv.config();
 
 export class AuthService {
   private userRepo = AppDataSource.getRepository(User);
 
-  async register(name: string, email: string, password: string) {
+  async register(name: string, email: string, password: string, role: string) {
     const existingUser = await this.userRepo.findOneBy({ email });
 
     if (existingUser) {
@@ -23,6 +24,7 @@ export class AuthService {
       name,
       email,
       password: hashedPassword,
+      role,
       createdAt: new Date(),
       updatedAt: null,
     });
@@ -35,7 +37,8 @@ export class AuthService {
     };
   }
 
-  async login(email: string, password: string) {
+  async login(body: LoginType) {
+    const { email, password } = body;
     const user = await this.userRepo.findOneBy({ email });
 
     if (!user) {
@@ -44,15 +47,25 @@ export class AuthService {
 
     const isPasswordValid = await bcrypt.compare(password, user.password);
     if (!isPasswordValid) {
-      throw new Error("Invalid Credentials");
+      const error: any = new Error("Invalid Credentials");
+      error.statusCode = 401;
+      throw error;
     }
 
-    const accessToken = jwt.sign({ email }, process.env.ACCESS_SECRET, {
-      expiresIn: "15m",
-    });
-    const refreshToken = jwt.sign({ email }, process.env.REFRESH_SECRET, {
-      expiresIn: "3d",
-    }); // Generate JWT token here if needed
+    const accessToken = jwt.sign(
+      { email, role: user.role },
+      process.env.ACCESS_SECRET,
+      {
+        expiresIn: "15m",
+      },
+    );
+    const refreshToken = jwt.sign(
+      { email, role: user.role },
+      process.env.REFRESH_SECRET,
+      {
+        expiresIn: "3d",
+      },
+    ); // Generate JWT token here if needed
     // For simplicity, we are not generating a JWT token in this example.
 
     const decode = jwt.verify(
@@ -66,6 +79,7 @@ export class AuthService {
     return {
       status: 200,
       message: "Login successful",
+      role: user?.role,
       accessToken,
       refreshToken,
       expiresIn,
@@ -79,6 +93,7 @@ export class AuthService {
         process.env.REFRESH_SECRET,
       ) as jwt.JwtPayload;
       const email = decode.email;
+
       if (!email) {
         throw new Error("Invalid refresh token");
       }
@@ -86,9 +101,13 @@ export class AuthService {
       if (!user) {
         throw new Error("User not found");
       }
-      const accessToken = jwt.sign({ email }, process.env.ACCESS_SECRET, {
-        expiresIn: "15m",
-      });
+      const accessToken = jwt.sign(
+        { email, role: user.role },
+        process.env.ACCESS_SECRET,
+        {
+          expiresIn: "15m",
+        },
+      );
       const decodeAccess = jwt.verify(
         accessToken,
         process.env.ACCESS_SECRET,
