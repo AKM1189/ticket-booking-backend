@@ -22,12 +22,18 @@ export const createApp = async () => {
     .then(async () => {
       const app = express();
 
-      const options = {
-        origin: "http://localhost:5176",
-        credentials: true,
-      };
+      // Update CORS for production
+      const allowedOrigins =
+        process.env.NODE_ENV === "production"
+          ? [process.env.PRODUCTION_FRONTEND_URL]
+          : ["http://localhost:5176"];
 
-      app.use(cors(options));
+      app.use(
+        cors({
+          origin: allowedOrigins,
+          credentials: true,
+        }),
+      );
 
       app.use(express.json());
       app.use(express.urlencoded({ extended: false }));

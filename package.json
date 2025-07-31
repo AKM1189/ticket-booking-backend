@@ -31,9 +31,7 @@
       "typeorm": "0.3.24"
    },
    "scripts": {
-      "start": "node api/index.js",
-      "dev": "nodemon --watch src --exec ts-node src/app.ts",
-      "typeorm": "typeorm-ts-node-commonjs",
-      "build": "tsc"
-   }
+  "build": "tsc",
+  "vercel-build": "npm run build"
+}
 }

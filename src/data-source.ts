@@ -23,4 +23,9 @@ export const AppDataSource = new DataSource({
   entities: ["src/entity/*.ts"],
   migrations: [],
   subscribers: [],
+  connectTimeout: 10000, // 10 seconds
+  extra: {
+    connectionLimit: 5,
+    connectTimeout: 10000,
+  },
 });
