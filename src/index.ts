@@ -36,6 +36,7 @@ AppDataSource.initialize()
     app.use("/api/admin/", movieRoutes);
     app.use("/api/admin/", genreRoutes);
 
+    /////
     //only for local
     if (process.env.NODE_ENV !== "production") {
       app.listen(process.env.PORT, () => {
