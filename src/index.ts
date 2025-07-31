@@ -35,9 +35,14 @@ AppDataSource.initialize()
     app.use("/api/auth/", authRoutes);
     app.use("/api/admin/", movieRoutes);
     app.use("/api/admin/", genreRoutes);
-    app.listen(process.env.PORT, () => {
-      console.log(`Server is running on port ${process.env.PORT} `);
-    });
+
+    //only for local
+    if (process.env.NODE_ENV !== "production") {
+      app.listen(process.env.PORT, () => {
+        console.log(`Server is running on port ${process.env.PORT} `);
+      });
+    }
+    //////
 
     // const user = new User()
     // user.firstName = "Timber"
