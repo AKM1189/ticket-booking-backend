@@ -56,23 +56,24 @@ export class GenreService {
   async updateGenre(genreId: number, body: GenreType) {
     const { name } = body;
 
-    const existingGenre = await this.genreRepo.findOneBy({ id: genreId });
-    if (!existingGenre) {
+    const existingGenreById = await this.genreRepo.findOneBy({ id: genreId });
+    if (!existingGenreById) {
       return {
         status: 404,
         message: "Genre not found.",
       };
     }
 
-    const existingGenreName = await this.genreRepo.findOneBy({ name });
-    if (existingGenreName) {
+    const existingGenreByName = await this.genreRepo.findOneBy({ name });
+    console.log("existing genre", existingGenreByName);
+    if (existingGenreByName && existingGenreByName.id !== genreId) {
       return {
         status: 400,
         message: "Genre name already exists.",
       };
     }
 
-    const updatedGenre = this.genreRepo.merge(existingGenre, { ...body });
+    const updatedGenre = this.genreRepo.merge(existingGenreById, { ...body });
     const saved = await this.genreRepo.save(updatedGenre);
 
     return {

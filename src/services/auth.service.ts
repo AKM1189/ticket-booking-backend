@@ -136,7 +136,7 @@ export class AuthService {
     const resetCode = Math.floor(100000 + Math.random() * 900000).toString();
 
     const resetToken = jwt.sign({ email, resetCode }, process.env.JWT_SECRET, {
-      expiresIn: "10m",
+      expiresIn: "5m",
     });
 
     const content = `

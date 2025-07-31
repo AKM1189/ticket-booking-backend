@@ -7,9 +7,6 @@ export class CreateGenreDto {
   @IsString()
   description: string;
 
-  @IsNumber()
-  movieCount: number;
-
   @IsString()
   color: string;
 }
