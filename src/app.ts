@@ -36,14 +36,9 @@ export const createApp = async () => {
       app.use("/api/auth/", authRoutes);
       app.use("/api/admin/", movieRoutes);
       app.use("/api/admin/", genreRoutes);
+
       return app;
-      /////
-      //only for local
-      // if (process.env.NODE_ENV !== "production") {
-      //   app.listen(process.env.PORT, () => {
-      //     console.log(`Server is running on port ${process.env.PORT} `);
-      //   });
-      // }
+
       //////
 
       // const user = new User()
@@ -61,3 +56,12 @@ export const createApp = async () => {
     })
     .catch((error) => error);
 };
+const localServer = async () => {
+  const app = await createApp();
+  app.listen(process.env.PORT, () => {
+    console.log(`Server is running on port ${process.env.PORT} `);
+  });
+};
+if (process.env.NODE_ENV !== "production") {
+  localServer();
+}
