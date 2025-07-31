@@ -12,7 +12,7 @@ const appPromise = createApp().catch((error) => {
 });
 
 export default async function handler(req, res) {
-  // res.status(200).json({ message: "Successfully deployed on Vercel" });
+  // res.status(200).json({ message: "Successfully deployed on Vercel" });//////
   const app = await appPromise;
   console.log("app", app);
   const handler = serverless(app);
