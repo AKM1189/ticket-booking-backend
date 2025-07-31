@@ -1,4 +1,3 @@
-// api/index.ts
 import { createApp } from "../src/app";
 import serverless from "serverless-http";
 
