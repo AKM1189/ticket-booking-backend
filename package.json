@@ -10,6 +10,7 @@
       "@types/express": "^5.0.2",
       "@types/node": "^22.13.10",
       "@types/nodemailer": "^6.4.17",
+      "@vercel/node": "^5.3.7",
       "dotenv": "^16.5.0",
       "nodemon": "^3.1.10",
       "ts-node": "^10.9.2",
@@ -27,11 +28,12 @@
       "mysql2": "^3.14.0",
       "nodemailer": "^7.0.3",
       "reflect-metadata": "^0.2.2",
+      "serverless-http": "^3.2.0",
       "typeorm": "0.3.24"
    },
    "scripts": {
-      "start": "ts-node src/index.ts",
-      "dev": "nodemon --watch src --exec ts-node src/index.ts",
+      "start": "ts-node src/app.ts",
+      "dev": "nodemon --watch src --exec ts-node src/app.ts",
       "typeorm": "typeorm-ts-node-commonjs",
       "build": "tsc"
    }
