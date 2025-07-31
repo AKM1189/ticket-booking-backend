@@ -18,7 +18,9 @@ declare global {
 }
 
 export const createApp = async () => {
+  console.log("Initializing DB...");
   await AppDataSource.initialize();
+  console.log("DB initialized!");
   const app = express();
 
   // Update CORS for production
