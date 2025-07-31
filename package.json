@@ -30,8 +30,8 @@
       "serverless-http": "^3.2.0",
       "typeorm": "0.3.24"
    },
-   "scripts": {
+"scripts": {
   "build": "tsc",
-  "vercel-build": "npm run build"
+  "vercel-build": "npm run build && cp -r src/entity api/entity" 
 }
 }
