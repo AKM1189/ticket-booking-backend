@@ -1,11 +1,11 @@
-import { AppDataSource } from "./data-source";
-import { User } from "./entity/User";
+import { AppDataSource } from "../src/data-source";
+import { User } from "../src/entity/User";
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
-import authRoutes from "./routes/authRoutes";
-import movieRoutes from "./routes/movieRoutes";
-import genreRoutes from "./routes/genreRoutes";
+import authRoutes from "../src/routes/authRoutes";
+import movieRoutes from "../src/routes/movieRoutes";
+import genreRoutes from "../src/routes/genreRoutes";
 import cookieParser from "cookie-parser";
 dotenv.config();
 
