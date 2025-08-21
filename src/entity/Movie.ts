@@ -6,8 +6,13 @@ import {
   ManyToMany,
   JoinTable,
   Long,
+  ManyToOne,
 } from "typeorm";
 import { Genre } from "./Genre";
+import { Review } from "./Review";
+import { Cast } from "./Cast";
+import { Image } from "./Image";
+import { Schedule } from "./Schedule";
 
 @Entity()
 export class Movie {
@@ -35,14 +40,8 @@ export class Movie {
   @Column()
   status: string;
 
-  @Column({ type: "text" })
-  posterUrl: string;
-
   @Column({ nullable: true })
   trailerId: string;
-
-  @Column("simple-array", { nullable: true })
-  photos: string[];
 
   @Column("simple-array")
   experience: string[];
@@ -53,7 +52,24 @@ export class Movie {
   @Column({ nullable: true })
   updatedAt: Date;
 
-  @ManyToMany((type) => Genre)
+  @ManyToMany(() => Genre)
   @JoinTable()
   genres: Genre[];
+
+  @ManyToMany(() => Cast, (cast) => cast.movies, { eager: true })
+  @JoinTable()
+  casts: Cast[];
+
+  @OneToMany(() => Review, (review) => review.movie)
+  reviews: Review[];
+
+  @ManyToOne(() => Image)
+  poster: Image;
+
+  @ManyToMany(() => Image)
+  @JoinTable()
+  photos: Image[];
+
+  @OneToMany(() => Schedule, (schedule) => schedule.movie)
+  schedules: Schedule[];
 }

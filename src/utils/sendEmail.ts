@@ -1,10 +1,6 @@
 import nodemailer from "nodemailer";
 
-export const sentResetEmail = (
-  userEmail: string,
-  subject: string,
-  html: string,
-) => {
+export const sendEmail = (userEmail: string, subject: string, html: string) => {
   // Create a transporter object
   const transporter = nodemailer.createTransport({
     service: "gmail",
@@ -19,7 +15,7 @@ export const sentResetEmail = (
 
   // Configure the mailoptions object
   const mailOptions = {
-    from: `"Movie Palace Support" ${process.env.EMAIL_USER}`,
+    from: `"Movie Palace" ${process.env.EMAIL_USER}`,
     to: userEmail,
     subject: subject,
     html,

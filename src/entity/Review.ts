@@ -1,19 +1,26 @@
-// import { Entity, PrimaryGeneratedColumn, Column, Decimal128 } from "typeorm";
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne } from "typeorm";
+import { Movie } from "./Movie";
 
-// @Entity()
-// export class Review {
-//   @PrimaryGeneratedColumn()
-//   id: number;
+@Entity()
+export class Review {
+  @PrimaryGeneratedColumn()
+  id: number;
 
-//   @Column()
-//   rating: Decimal128;
+  @Column({ type: "decimal", precision: 10, scale: 2 })
+  rating: number;
 
-//   @Column()
-//   decription: string;
+  @Column()
+  reviewDate: Date;
 
-//   @Column()
-//   createdAt: Date;
+  @Column()
+  decription: string;
 
-//   @Column({ nullable: true })
-//   updatedAt: Date;
-// }
+  @Column()
+  createdAt: Date;
+
+  @Column({ nullable: true })
+  updatedAt: Date;
+
+  @ManyToOne(() => Movie, (movie) => movie.reviews)
+  movie: Movie;
+}

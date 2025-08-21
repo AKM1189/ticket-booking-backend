@@ -1,3 +1,5 @@
+import { MulterFile } from "./multer";
+
 export type MovieType = {
   title: string;
   description: string;
@@ -6,9 +8,10 @@ export type MovieType = {
   subtitle: string[];
   releaseDate: Date;
   status: string;
-  posterUrl: string;
+  poster: MulterFile;
   trailerId: string;
-  photos: string[];
+  photos: MulterFile[];
   experience: string[];
   genres: number[];
+  casts: number[];
 };

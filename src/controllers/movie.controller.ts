@@ -3,24 +3,39 @@ import { AppDataSource } from "../data-source";
 import { Movie } from "../entity/Movie";
 import { MovieService } from "../services/movie.service";
 import { getQueryParams } from "../utils/queryParams";
+import { Like } from "typeorm";
+import { MulterFileWithLocation } from "../types/multer-s3-type";
 
 const movieService = new MovieService();
 export const getMovies = async (req: Request, res: Response) => {
   try {
     const movieRepository = AppDataSource.getRepository(Movie);
-    const { page, limit, sortBy, sortOrder } = getQueryParams(
+    const { page, limit, sortBy, sortOrder, status, search } = getQueryParams(
       req,
       1,
       10,
       "releaseDate",
+      null,
+      null,
     );
 
+    // Build where clause conditionally
+    const whereClause: any = {};
+    if (status) {
+      whereClause.status = status;
+    }
+    if (search) {
+      whereClause.title = Like(`%${search}%`);
+    }
+
     const [movies, total] = await movieRepository.findAndCount({
+      relations: ["genres", "casts", "poster", "photos", "reviews"],
       order: {
         [sortBy]: sortOrder,
       },
       skip: (page - 1) * limit,
       take: limit,
+      where: whereClause,
     });
 
     res.status(200).json({
@@ -38,15 +53,33 @@ export const getMovies = async (req: Request, res: Response) => {
 };
 
 export const addMovie = async (req: Request, res: Response) => {
+  const files = req.files as {
+    [fieldname: string]: Express.Multer.File[];
+  };
+  const poster = files["poster"]?.[0];
+  const photos = files["photos[]"] || [];
+
+  const posterUrl = `${req.protocol}://${req.get("host")}/uploads/${
+    poster.filename
+  }`;
+  const photoUrls = photos.map((file) => {
+    return `${req.protocol}://${req.get("host")}/uploads/${file.filename}`;
+  });
+
   try {
-    const { status, message, data } = await movieService.addMovie(req.body);
+    const { status, message, data } = await movieService.addMovie(
+      req.body,
+      posterUrl,
+      photoUrls,
+    );
+
     res.status(status).json({
       status,
       message,
       data,
     });
   } catch (err) {
-    res.status(500).json({ message: err.message });
+    res.status(500).json({ err, message: err.message });
   }
 };
 
@@ -72,14 +105,28 @@ export const updateMovie = async (req: Request, res: Response) => {
     if (!movieId || isNaN(movieId)) {
       res.status(400).json({ message: "Invalid or missing movie ID" });
     }
-    const { status, message, data } = await movieService.updateMovie(
+
+    const files = req.files as {
+      [fieldname: string]: Express.Multer.File[];
+    };
+    const poster = files["poster"]?.[0] || null;
+    const photos = files["photos[]"] || [];
+    const posterUrl = `${req.protocol}://${req.get("host")}/uploads/${
+      poster.filename
+    }`;
+    const photoUrls = photos.map((file) => {
+      return `${req.protocol}://${req.get("host")}/uploads/${file.filename}`;
+    });
+
+    const { status, message } = await movieService.updateMovie(
       movieId,
       req.body,
+      posterUrl,
+      photoUrls,
     );
     res.status(201).json({
       status,
       message,
-      data,
     });
   } catch (err) {
     res.status(500).json({ message: err.message });

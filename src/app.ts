@@ -6,7 +6,13 @@ import dotenv from "dotenv";
 import authRoutes from "./routes/authRoutes";
 import movieRoutes from "./routes/movieRoutes";
 import genreRoutes from "./routes/genreRoutes";
+import castRoutes from "./routes/castRoutes";
+import theatreRoutes from "./routes/theatreRoutes";
+import screenRoutes from "./routes/screenRoutes";
+import seatTypeRoute from "./routes/seatTypeRoute";
+import userRoutes from "./routes/userRoutes";
 import cookieParser from "cookie-parser";
+import path from "path";
 dotenv.config();
 
 declare global {
@@ -27,7 +33,7 @@ export const createApp = async () => {
   const allowedOrigins =
     process.env.NODE_ENV === "production"
       ? [process.env.PRODUCTION_FRONTEND_URL]
-      : ["http://localhost:5176"];
+      : ["http://localhost:5178"];
 
   app.use(
     cors({
@@ -40,9 +46,17 @@ export const createApp = async () => {
   app.use(express.urlencoded({ extended: false }));
   app.use(cookieParser());
 
+  // Static file serving
+  app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+
   app.use("/api/auth/", authRoutes);
   app.use("/api/admin/", movieRoutes);
   app.use("/api/admin/", genreRoutes);
+  app.use("/api/admin/", castRoutes);
+  app.use("/api/admin/", theatreRoutes);
+  app.use("/api/admin/", screenRoutes);
+  app.use("/api/admin/", seatTypeRoute);
+  app.use("/api/admin/", userRoutes);
 
   return app;
 };

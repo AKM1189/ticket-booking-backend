@@ -3,16 +3,25 @@ import { User } from "../entity/User";
 import bcrypt from "bcrypt";
 import jwt, { JwtPayload } from "jsonwebtoken";
 import dotenv from "dotenv";
-import { sentResetEmail } from "../utils/sendEmail";
-import { LoginType } from "../types/AuthType";
+import { sendEmail } from "../utils/sendEmail";
+import { LoginType, Role } from "../types/AuthType";
 
 dotenv.config();
 
 export class AuthService {
   private userRepo = AppDataSource.getRepository(User);
 
-  async register(name: string, email: string, password: string, role: string) {
-    const existingUser = await this.userRepo.findOneBy({ email });
+  async register(
+    name: string,
+    email: string,
+    password: string,
+    phoneNo: string,
+    role: string,
+  ) {
+    const existingUser = await this.userRepo.findOneBy({
+      email,
+      role: Role.user,
+    });
 
     if (existingUser) {
       throw new Error("User already exists with this email");
@@ -24,7 +33,9 @@ export class AuthService {
       name,
       email,
       password: hashedPassword,
+      phoneNo,
       role,
+      active: true,
       createdAt: new Date(),
       updatedAt: null,
     });
@@ -52,6 +63,12 @@ export class AuthService {
       throw error;
     }
 
+    if (user && !user.active) {
+      throw new Error(
+        "Your account has been deactivated. Please contact support.",
+      );
+    }
+
     const accessToken = jwt.sign(
       { email, role: user.role },
       process.env.ACCESS_SECRET,
@@ -75,7 +92,6 @@ export class AuthService {
     const expiresIn = decode?.exp
       ? new Date(decode.exp * 1000).toISOString()
       : null;
-
     return {
       status: 200,
       message: "Login successful",
@@ -132,6 +148,11 @@ export class AuthService {
     if (!user) {
       throw new Error("User not found");
     }
+    if (user && !user.active) {
+      throw new Error(
+        "Your account has been deactivated. Please contact support.",
+      );
+    }
 
     const resetCode = Math.floor(100000 + Math.random() * 900000).toString();
 
@@ -151,7 +172,7 @@ export class AuthService {
     </div>
   `;
 
-    sentResetEmail(email, "Reset Your Password - Movie Palace 🎟️", content);
+    sendEmail(email, "Reset Your Password - Movie Palace 🎟️", content);
     return { message: "Reset code sent to your email", resetToken };
   }
 

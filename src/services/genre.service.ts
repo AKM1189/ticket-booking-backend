@@ -65,7 +65,6 @@ export class GenreService {
     }
 
     const existingGenreByName = await this.genreRepo.findOneBy({ name });
-    console.log("existing genre", existingGenreByName);
     if (existingGenreByName && existingGenreByName.id !== genreId) {
       return {
         status: 400,
@@ -73,7 +72,7 @@ export class GenreService {
       };
     }
 
-    const updatedGenre = this.genreRepo.merge(existingGenreById, { ...body });
+    const updatedGenre = { ...existingGenreById, ...body };
     const saved = await this.genreRepo.save(updatedGenre);
 
     return {
