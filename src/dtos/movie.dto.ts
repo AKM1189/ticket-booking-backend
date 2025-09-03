@@ -50,9 +50,6 @@ export class CreateMovieDto {
   releaseDate: string;
 
   @IsString()
-  status: string;
-
-  @IsString()
   trailerId: string;
 
   @IsArray()

@@ -33,6 +33,20 @@ export const getTheatre = async (req: Request, res: Response) => {
   }
 };
 
+export const getTheatreByShowingMovie = async (req: Request, res: Response) => {
+  try {
+    const movieId = req.query.movieId as string;
+    const { status, data } = await theatreService.getTheatresByShowingMovie(
+      movieId,
+    );
+    res.status(status).json({
+      data,
+    });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
 export const getTheatreById = async (req: Request, res: Response) => {
   try {
     const theatreRepo = AppDataSource.getRepository(Theatre);

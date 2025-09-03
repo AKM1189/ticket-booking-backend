@@ -2,7 +2,7 @@ import { In } from "typeorm";
 import { AppDataSource } from "../data-source";
 import { Genre } from "../entity/Genre";
 import { Movie } from "../entity/Movie";
-import { MovieType } from "../types/MovieType";
+import { MovieStatus, MovieType } from "../types/MovieType";
 import { uploadImagesToServer } from "../utils/imageUploads";
 import { Cast } from "../entity/Cast";
 import { CastType } from "../types/CastType";
@@ -26,7 +26,6 @@ export class MovieService {
       language,
       subtitle,
       releaseDate,
-      status,
       trailerId,
       experience,
       genres,
@@ -65,7 +64,7 @@ export class MovieService {
       language,
       subtitle,
       releaseDate,
-      status,
+      status: MovieStatus.comingSoon,
       poster: posterImage,
       trailerId,
       photos: photoImages,

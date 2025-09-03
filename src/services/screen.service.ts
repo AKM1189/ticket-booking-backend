@@ -1,4 +1,4 @@
-import { Like } from "typeorm";
+import { And, Like } from "typeorm";
 import { AppDataSource } from "../data-source";
 import { Genre } from "../entity/Genre";
 import { Screen } from "../entity/Screen";
@@ -75,15 +75,51 @@ export class ScreenService {
     };
   }
 
+  async getScreenByTheatre(theatreId: string) {
+    const [screens] = await this.screenRepo.findAndCount({
+      relations: ["theatre", "seatTypes.seatType"],
+      where: { theatre: { id: parseInt(theatreId) } },
+    });
+
+    // Transform seatTypes id -> typeId
+    const transformedScreens = screens.map((screen) => ({
+      ...screen,
+      multiplier: parseFloat(screen.multiplier.toString()),
+    }));
+
+    return {
+      status: 200,
+      data: transformedScreens,
+    };
+  }
+
+  async getScreenByShow(theatreId: string, movieId: string) {
+    const screens = await AppDataSource.getRepository(Screen)
+      .createQueryBuilder("screen")
+      .innerJoin("screen.schedules", "schedule")
+      .innerJoin("schedule.theatre", "theatre")
+      .innerJoin("schedule.movie", "movie")
+      .where("movie.id = :movieId", { movieId })
+      .andWhere("theatre.id = :theatreId", { theatreId })
+      .leftJoinAndSelect("screen.seatTypes", "seatTypes")
+      .leftJoinAndSelect("seatTypes.seatType", "seatType")
+      // .distinct(true)
+      .getMany();
+    return {
+      status: 200,
+      data: screens,
+    };
+  }
+
   async addScreen(body: Omit<ScreenType, "id">) {
     const existingGenre = await this.screenRepo.findOneBy({ name: body.name });
     if (existingGenre) {
       throw new Error("Screen already exists.");
     }
 
-    const theatreEntity =
-      body?.theatreId &&
-      (await this.theatreRepo.findOneBy({ id: parseInt(body?.theatreId) }));
+    const theatreEntity = await this.theatreRepo.findOneBy({
+      id: parseInt(body?.theatreId),
+    });
 
     const newScreen = this.screenRepo.create({
       name: body.name,
@@ -132,8 +168,9 @@ export class ScreenService {
   async updateScreen(screenId: number, body: Omit<ScreenType, "id">) {
     const { name } = body;
 
-    const existingScreenById = await this.screenRepo.findOneBy({
-      id: screenId,
+    const existingScreenById = await this.screenRepo.findOne({
+      relations: ["theatre"],
+      where: { id: screenId },
     });
     if (!existingScreenById) {
       return {
@@ -150,9 +187,10 @@ export class ScreenService {
       };
     }
 
-    const theatreEntity =
-      body?.theatreId &&
-      (await this.theatreRepo.findOneBy({ id: parseInt(body?.theatreId) }));
+    const theatreEntity = await this.theatreRepo.findOne({
+      relations: ["screens"],
+      where: { id: parseInt(body?.theatreId) },
+    });
 
     const updatedScreen = {
       ...existingScreenById,
@@ -168,6 +206,47 @@ export class ScreenService {
       theatre: theatreEntity,
     };
     const saved = await this.screenRepo.save(updatedScreen);
+
+    // Update totalScreens
+    const oldTheatreId = existingScreenById.theatre?.id;
+    const newTheatreId = theatreEntity.id;
+
+    console.log("old", oldTheatreId);
+    console.log("new", newTheatreId);
+
+    // 1️⃣ Old theatre (if changed)
+    if (oldTheatreId && oldTheatreId !== newTheatreId) {
+      const oldTheatre = await this.theatreRepo.findOne({
+        where: { id: oldTheatreId },
+        relations: ["screens"],
+      });
+      if (oldTheatre) {
+        oldTheatre.totalScreens = oldTheatre.screens.length;
+        await this.theatreRepo.save(oldTheatre);
+      }
+    }
+
+    // 2️⃣ New theatre
+    const updatedTheatre = await this.theatreRepo.findOne({
+      where: { id: newTheatreId },
+      relations: ["screens"],
+    });
+    if (updatedTheatre) {
+      updatedTheatre.totalScreens = updatedTheatre.screens.length;
+      await this.theatreRepo.save(updatedTheatre);
+    }
+
+    // if (existingTheatre?.id !== theatreEntity?.id) {
+    //   await this.theatreRepo.save({
+    //     ...existingTheatre,
+    //     totalScreens: existingTheatre.totalScreens - 1,
+    //   });
+
+    //   await this.theatreRepo.save({
+    //     ...theatreEntity,
+    //     totalScreens: theatreEntity.totalScreens + 1,
+    //   });
+    // }
 
     // Fetch existing rows for this screen
     const existingSeatTypes = await this.screenSeatTypeRepo.find({
@@ -232,14 +311,12 @@ export class ScreenService {
       };
     }
 
-    // const theatre =
-    //   screen.theatre &&
-    //   (await this.theatreRepo.findOneBy({ id: screen.theatre.id }));
+    const theatre = await this.theatreRepo.findOneBy({ id: screen.theatre.id });
 
-    // await this.theatreRepo.save({
-    //   ...theatre,
-    //   totalScreens: theatre?.totalScreens - 1,
-    // });
+    await this.theatreRepo.save({
+      ...theatre,
+      totalScreens: theatre?.totalScreens - 1,
+    });
 
     await this.screenRepo.save({ ...screen, active: !screen.active });
 

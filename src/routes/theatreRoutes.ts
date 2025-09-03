@@ -6,6 +6,7 @@ import {
   deleteTheatre,
   getTheatre,
   getTheatreById,
+  getTheatreByShowingMovie,
   updateTheatre,
 } from "../controllers/theatre.controller";
 import { CreateTheatreDto } from "../dtos/theatre.dto";
@@ -14,6 +15,7 @@ const router = express.Router();
 
 router.get("/theatres", getTheatre);
 router.get("/theatres/:id", getTheatreById);
+router.get("/movie/schedules/theatres", getTheatreByShowingMovie);
 router.post(
   "/theatres",
   accessAsAdmin,

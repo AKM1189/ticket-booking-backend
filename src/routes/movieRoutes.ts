@@ -4,6 +4,7 @@ import {
   deleteMovie,
   getMovieById,
   getMovies,
+  getShowingMovies,
   updateMovie,
 } from "../controllers/movie.controller";
 import { validateDto } from "../middlewares/validateReqBody";
@@ -26,6 +27,8 @@ const router = express.Router();
 //   filename: (req, file, cb) => cb(null, Date.now() + "-" + file.originalname),
 // });
 // const upload = multer({ storage });
+
+router.get("/movies/showing/list", getShowingMovies);
 
 router.get("/movies", getMovies);
 router.get("/movies/:id", getMovieById);

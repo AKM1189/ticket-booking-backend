@@ -160,7 +160,9 @@ export class UserService {
 
     return {
       status: 200,
-      message: "User deactivated successfully.",
+      message: `User ${
+        user.active ? "deactivated" : "activated"
+      } successfully.`,
     };
   }
 }

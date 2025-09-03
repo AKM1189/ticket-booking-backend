@@ -10,6 +10,7 @@ import {
 import { Theatre } from "./Theatre";
 import { SeatType } from "./SeatType";
 import { ScreenSeatType } from "./ScreenSeatType";
+import { Schedule } from "./Schedule";
 
 @Entity()
 export class Screen {
@@ -54,4 +55,7 @@ export class Screen {
 
   @OneToMany(() => ScreenSeatType, (screenSeatType) => screenSeatType.screen)
   seatTypes: SeatType[];
+
+  @OneToMany(() => Schedule, (schedule) => schedule.screen)
+  schedules: Schedule[];
 }

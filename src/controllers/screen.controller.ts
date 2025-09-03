@@ -35,6 +35,38 @@ export const getScreen = async (req: Request, res: Response) => {
   }
 };
 
+export const getScreenByTheatre = async (req: Request, res: Response) => {
+  try {
+    const theatreId = req.query.theatreId as string;
+
+    const { status, data } = await screenService.getScreenByTheatre(theatreId);
+
+    res.status(status).json({
+      data,
+    });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+export const getScreenByShow = async (req: Request, res: Response) => {
+  try {
+    const theatreId = req.query.theatreId as string;
+    const movieId = req.query.movieId as string;
+
+    const { status, data } = await screenService.getScreenByShow(
+      theatreId,
+      movieId,
+    );
+
+    res.status(status).json({
+      data,
+    });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
 export const getGenreById = async (req: Request, res: Response) => {
   try {
     const genreRepo = AppDataSource.getRepository(Genre);

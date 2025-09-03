@@ -6,6 +6,8 @@ import {
   addScreen,
   deleteScreen,
   getScreen,
+  getScreenByShow,
+  getScreenByTheatre,
   updateScreen,
 } from "../controllers/screen.controller";
 import { CreateScreenDto } from "../dtos/screen.dto";
@@ -13,6 +15,9 @@ import { CreateScreenDto } from "../dtos/screen.dto";
 const router = express.Router();
 
 router.get("/screens", getScreen);
+router.get("/screens/all", getScreenByTheatre);
+
+router.get("/screens/showing", getScreenByShow);
 // router.get("/genres/:id", getGenreById);
 router.post("/screens", accessAsAdmin, validateDto(CreateScreenDto), addScreen);
 router.put(

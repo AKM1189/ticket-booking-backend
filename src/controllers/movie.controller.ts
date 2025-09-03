@@ -5,6 +5,8 @@ import { MovieService } from "../services/movie.service";
 import { getQueryParams } from "../utils/queryParams";
 import { Like } from "typeorm";
 import { MulterFileWithLocation } from "../types/multer-s3-type";
+import dayjs from "dayjs";
+import { MovieStatus } from "../types/MovieType";
 
 const movieService = new MovieService();
 export const getMovies = async (req: Request, res: Response) => {
@@ -29,7 +31,14 @@ export const getMovies = async (req: Request, res: Response) => {
     }
 
     const [movies, total] = await movieRepository.findAndCount({
-      relations: ["genres", "casts", "poster", "photos", "reviews"],
+      relations: [
+        "genres",
+        "casts",
+        "poster",
+        "photos",
+        "reviews",
+        "schedules",
+      ],
       order: {
         [sortBy]: sortOrder,
       },
@@ -46,6 +55,34 @@ export const getMovies = async (req: Request, res: Response) => {
         limit,
         totalPages: Math.ceil(total / limit),
       },
+    });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+export const getShowingMovies = async (req: Request, res: Response) => {
+  try {
+    const today = dayjs().format("YYYY-MM-DD");
+    const time = dayjs().format("HH:mm:ss");
+
+    const movies = await AppDataSource.getRepository(Movie)
+      .createQueryBuilder("movie")
+      .innerJoin("movie.schedules", "schedule")
+      .leftJoinAndSelect("movie.genres", "genres")
+      .leftJoinAndSelect("movie.casts", "casts")
+      .leftJoinAndSelect("movie.poster", "poster") // include poster
+      .leftJoinAndSelect("movie.photos", "photos")
+      .leftJoinAndSelect("movie.reviews", "reviews")
+      .where(
+        `(schedule.showDate = :today AND schedule.showTime >= :time) OR (schedule.showDate > :today)`,
+        { today, time },
+      )
+      .distinct(true)
+      .getMany();
+
+    res.status(200).json({
+      data: movies,
     });
   } catch (err) {
     res.status(500).json({ message: err.message });

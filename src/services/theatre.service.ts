@@ -4,6 +4,7 @@ import { Genre } from "../entity/Genre";
 import { Theatre } from "../entity/Theatre";
 import { GenreType } from "../types/GenreType";
 import { TheatreInputType } from "../types/TheatreType";
+import dayjs from "dayjs";
 
 export class TheatreService {
   private theatreRepo = AppDataSource.getRepository(Theatre);
@@ -39,7 +40,8 @@ export class TheatreService {
         { phoneNo: Like(`%${search}%`) },
       ];
     }
-    const [genres, total] = await this.theatreRepo.findAndCount({
+    const [theatres, total] = await this.theatreRepo.findAndCount({
+      relations: ["screens", "schedules"],
       order: {
         [sortBy]: sortOrder,
       },
@@ -50,13 +52,35 @@ export class TheatreService {
 
     return {
       status: 200,
-      data: genres,
+      data: theatres,
       pagination: {
         total,
         page,
         limit,
         totalPages: Math.ceil(total / limit),
       },
+    };
+  }
+
+  async getTheatresByShowingMovie(movieId: string) {
+    const today = dayjs().format("YYYY-MM-DD");
+    const time = dayjs().format("HH:mm:ss");
+    const theatres = await AppDataSource.getRepository(Theatre)
+      .createQueryBuilder("theatre")
+      .innerJoin("theatre.schedules", "schedule")
+      .innerJoin("schedule.movie", "movie")
+      .where("movie.id = :movieId", { movieId })
+      .andWhere(
+        `((schedule.showDate = :today AND schedule.showTime >= :time) OR (schedule.showDate > :today))`,
+        { today, time },
+      )
+      .andWhere("theatre.active = 1")
+      .distinct(true)
+      .getMany();
+
+    return {
+      status: 200,
+      data: theatres,
     };
   }
 

@@ -58,9 +58,23 @@ export const refreshAccessToken = async (req: Request, res: Response) => {
     if (!refresh) {
       res.status(408).json({ message: "No refresh token provided" });
     }
-    const { accessToken, expiresIn } = await authService.refreshAccessToken(
-      refresh,
-    );
+    const { accessToken, expiresIn, newRefreshToken } =
+      await authService.refreshAccessToken(refresh);
+
+    res.clearCookie("refreshToken", {
+      httpOnly: true,
+      secure: true,
+      sameSite: "strict",
+      path: "/",
+    });
+
+    res.cookie("refreshToken", newRefreshToken, {
+      httpOnly: true,
+      secure: true,
+      sameSite: "strict",
+      path: "/",
+      maxAge: 3 * 24 * 60 * 60 * 1000,
+    }); // 3 days
     res.status(200).json({ accessToken, expiresIn });
   } catch (err) {
     res.status(401).json({ message: err.message });

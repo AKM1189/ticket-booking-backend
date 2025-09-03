@@ -8,6 +8,7 @@ import {
 } from "typeorm";
 import { Screen } from "./Screen";
 import { ScreenSeatType } from "./ScreenSeatType";
+import { ScheduleSeatType } from "./ScheduleSeatType";
 
 @Entity()
 export class SeatType {
@@ -22,4 +23,10 @@ export class SeatType {
 
   @OneToMany(() => ScreenSeatType, (screenSeatType) => screenSeatType.seatType)
   screens: ScreenSeatType[];
+
+  @OneToMany(
+    () => ScheduleSeatType,
+    (scheduleSeatType) => scheduleSeatType.seatType,
+  )
+  schedules: ScheduleSeatType[];
 }

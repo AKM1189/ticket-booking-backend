@@ -1,5 +1,6 @@
 import { Entity, PrimaryGeneratedColumn, Column, OneToMany } from "typeorm";
 import { Screen } from "./Screen";
+import { Schedule } from "./Schedule";
 
 @Entity()
 export class Theatre {
@@ -29,4 +30,7 @@ export class Theatre {
 
   @OneToMany(() => Screen, (screen) => screen.theatre)
   screens: Screen[];
+
+  @OneToMany(() => Schedule, (schedule) => schedule.theatre)
+  schedules: Schedule[];
 }

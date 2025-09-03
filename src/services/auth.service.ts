@@ -117,11 +117,20 @@ export class AuthService {
       if (!user) {
         throw new Error("User not found");
       }
+
       const accessToken = jwt.sign(
         { email, role: user.role },
         process.env.ACCESS_SECRET,
         {
           expiresIn: "15m",
+        },
+      );
+
+      const newRefreshToken = jwt.sign(
+        { email, role: user.role },
+        process.env.REFRESH_SECRET,
+        {
+          expiresIn: "3d",
         },
       );
       const decodeAccess = jwt.verify(
@@ -133,6 +142,7 @@ export class AuthService {
         : null;
       return {
         accessToken,
+        newRefreshToken,
         expiresIn,
       };
     } catch (err) {

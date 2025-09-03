@@ -4,8 +4,10 @@ import {
   Column,
   OneToOne,
   JoinColumn,
+  OneToMany,
 } from "typeorm";
 import { Image } from "./Image";
+import { Booking } from "./Booking";
 
 @Entity()
 export class User {
@@ -39,4 +41,7 @@ export class User {
 
   @Column({ nullable: true })
   updatedAt: Date;
+
+  @OneToMany(() => Booking, (booking) => booking.user)
+  bookings: Booking;
 }

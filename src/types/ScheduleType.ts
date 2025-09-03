@@ -13,3 +13,16 @@ export type ScheduleType = {
   availableSeats: 180;
   isActive: true;
 };
+
+export type ScheduleBodyType = {
+  movieId: number;
+  theatreId: number;
+  screenId: number;
+  showDate: string;
+  showTime: string;
+  multiplier: string;
+  availableSeats: 180;
+  isActive: true;
+  language: string;
+  subtitle: string;
+};
