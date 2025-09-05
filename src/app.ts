@@ -19,6 +19,8 @@ import seatTypeRoute from "./routes/seatTypeRoute";
 import scheduleRoutes from "./routes/scheduleRoutes";
 import bookingRoutes from "./routes/bookingRoutes";
 import userRoutes from "./routes/userRoutes";
+import dashboardRoutes from "./routes/reportRoutes";
+import profileRoutes from "./routes/profileRoutes";
 
 import { updateMovieStatus } from "./utils/updateMovieStatus";
 import { getBookedSeats } from "./utils/getBookedSeats";
@@ -73,6 +75,8 @@ export const createApp = async () => {
   app.use(adminUrl, seatTypeRoute);
   app.use(adminUrl, scheduleRoutes);
   app.use(adminUrl, bookingRoutes);
+  app.use(adminUrl, dashboardRoutes);
+  app.use(adminUrl, profileRoutes);
   app.use(adminUrl, userRoutes);
 
   return app;
@@ -102,20 +106,20 @@ const startServer = async () => {
   }
 
   const tempSeats: Record<string, TempSeat[]> = {};
-  // [{seatId: "A1", userId: "10", expires: 10}]
+
   io.on("connection", (socket) => {
     console.log(`Socket connected: ${socket.id}`);
 
     socket.on("join schedule", async (scheduleId: string) => {
       socket.join(scheduleId);
-
+      console.log("joined room", scheduleId);
       // Send initial seat status
       const booked = await getBookedSeats(parseInt(scheduleId));
 
-      const temp = tempSeats[scheduleId]?.map((s) => s.seatId) || [];
-      console.log("booked", booked, "temp", temp);
+      // const temp = tempSeats[scheduleId]?.map((s) => s.seatId) || [];
+      console.log("booked", booked, "temp", tempSeats[scheduleId]);
 
-      socket.emit("update temp seats", temp);
+      io.to(scheduleId).emit("update temp seats", tempSeats[scheduleId]);
       socket.emit("booked seats", booked);
     });
 
@@ -124,16 +128,20 @@ const startServer = async () => {
       const booked = await getBookedSeats(parseInt(scheduleId));
       const temp = tempSeats[scheduleId] || [];
 
-      if (booked.includes(seatId) || temp.some((s) => s.seatId === seatId))
+      if (booked.includes(seatId) || temp.some((s) => s.seatId === seatId)) {
+        socket.emit("booked seats", booked);
         return;
+      }
 
       tempSeats[scheduleId] = [
         ...temp,
-        { seatId, userId, expiresAt: Date.now() + 2 * 60 * 1000 },
+        { seatId, userId, expiresAt: Date.now() + 1000 * 60 * 1 },
       ];
+
       console.log("temp seats", tempSeats[scheduleId]);
       io.to(scheduleId).emit("update temp seats", tempSeats[scheduleId]);
     });
+
     // Deselect seat
     socket.on("deselect seat", ({ scheduleId, seatId, userId }) => {
       tempSeats[scheduleId] = (tempSeats[scheduleId] || []).filter(
@@ -142,28 +150,55 @@ const startServer = async () => {
       io.to(scheduleId).emit("update temp seats", tempSeats[scheduleId]);
     });
 
-    // Remove expired seats automatically
-    setInterval(() => {
-      const now = Date.now();
-      for (const scheduleId in tempSeats) {
-        const before = tempSeats[scheduleId].length;
-        console.log("checking");
-        tempSeats[scheduleId] = tempSeats[scheduleId].filter(
-          (s) => s.expiresAt > now,
-        );
-        if (tempSeats[scheduleId].length !== before) {
-          console.log("updated temp seats", tempSeats[scheduleId]);
-          io.to(scheduleId).emit("update temp seats", tempSeats[scheduleId]);
-        }
-      }
-    }, 5000);
+    // reset temp seat
+    socket.on("reset temp seats", ({ scheduleId, userId }) => {
+      tempSeats[scheduleId] = (tempSeats[scheduleId] || []).filter(
+        (s) => !(s.userId === userId),
+      );
+
+      io.to(scheduleId).emit("update temp seats", tempSeats[scheduleId]);
+    });
 
     socket.on("disconnect", () => {
+      // socket.emit("update temp seats", []);
+
+      io.emit("update temp seats", tempSeats);
       console.log("User disconnected");
     });
   });
 
+  setInterval(async () => {
+    const now = Date.now();
+
+    for (const scheduleId in tempSeats) {
+      const before = tempSeats[scheduleId].length;
+
+      // filter out expired seats
+      tempSeats[scheduleId] = tempSeats[scheduleId].filter(
+        (s) => s.expiresAt > now,
+      );
+      // 🔸 2. Remove seats that got booked in DB
+      const booked = await getBookedSeats(parseInt(scheduleId));
+      tempSeats[scheduleId] = tempSeats[scheduleId].filter(
+        (s) => !booked.includes(s.seatId),
+      );
+
+      // 🔸 3. Broadcast if list changed
+      if (tempSeats[scheduleId].length !== before) {
+        if (io.sockets.adapter.rooms.has(scheduleId)) {
+          console.log("temp seats updated", scheduleId, tempSeats[scheduleId]);
+          io.to(scheduleId).emit(
+            "update temp seats",
+            tempSeats[scheduleId] || [],
+          );
+          io.to(scheduleId).emit("booked seats", booked);
+        }
+      }
+    }
+  }, 5000);
+
   // Start server
+
   const PORT = process.env.PORT || 3000;
   server.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);

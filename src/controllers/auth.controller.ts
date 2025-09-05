@@ -1,8 +1,11 @@
 import { AuthService } from "../services/auth.service";
 import { Request, Response } from "express";
 import { Role } from "../types/AuthType";
+import { AppDataSource } from "../data-source";
+import { User } from "../entity/User";
 
 const authService = new AuthService();
+const userRepo = AppDataSource.getRepository(User);
 
 export const register = async (req: Request, res: Response) => {
   try {
@@ -87,14 +90,12 @@ export const getUserProfile = async (req: Request, res: Response) => {
     if (!user) {
       res.status(200).json({ role: Role.guest });
     }
-    res.status(200).json({
-      id: user.id,
-      name: user.name,
-      email: user.email,
-      role: user.role,
-      createdAt: user.createdAt,
-      updatedAt: user.updatedAt,
+    const currentUser = await userRepo.findOne({
+      relations: ["image"],
+      where: { id: user.id },
     });
+
+    res.status(200).json(currentUser);
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
@@ -113,6 +114,7 @@ export const getAdminProfile = async (req: Request, res: Response) => {
         name: user.name,
         email: user.email,
         role: user.role,
+        image: user.image,
         createdAt: user.createdAt,
         updatedAt: user.updatedAt,
       });
