@@ -5,7 +5,7 @@ const reportService = new ReportService();
 
 export const getCardInfo = async (req: Request, res: Response) => {
   try {
-    const { status, data } = await reportService.getCardInfo();
+    const { status, data } = await reportService.getCardInfo(req.user);
 
     res.status(status).json({
       data,
@@ -17,7 +17,7 @@ export const getCardInfo = async (req: Request, res: Response) => {
 
 export const getRecentRecords = async (req: Request, res: Response) => {
   try {
-    const { status, data } = await reportService.recentRecords();
+    const { status, data } = await reportService.recentRecords(req.user);
     res.status(status).json({
       data,
     });

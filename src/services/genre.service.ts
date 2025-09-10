@@ -1,3 +1,4 @@
+import { Like } from "typeorm";
 import { AppDataSource } from "../data-source";
 import { Genre } from "../entity/Genre";
 import { GenreType } from "../types/GenreType";
@@ -10,8 +11,10 @@ export class GenreService {
     limit: number,
     sortBy: string,
     sortOrder: string,
+    search: string,
   ) {
     const [genres, total] = await this.genreRepo.findAndCount({
+      where: { ...(search ? { name: Like(`%${search}%`) } : {}) },
       order: {
         [sortBy]: sortOrder,
       },
@@ -28,6 +31,15 @@ export class GenreService {
         limit,
         totalPages: Math.ceil(total / limit),
       },
+    };
+  }
+
+  async getAllGenre() {
+    const genres = await this.genreRepo.find();
+
+    return {
+      status: 200,
+      data: genres,
     };
   }
 

@@ -1,3 +1,4 @@
+import dayjs from "dayjs";
 import { AppDataSource } from "../data-source";
 import { Booking } from "../entity/Booking";
 import { Movie } from "../entity/Movie";
@@ -7,15 +8,16 @@ import { Theatre } from "../entity/Theatre";
 import { Ticket } from "../entity/Ticket";
 import { User } from "../entity/User";
 import { BookingType } from "../types/BookingType";
+import { ScheduleStatus } from "../types/ScheduleType";
 import { generateTicket } from "../utils/generateTicket";
+import { Like } from "typeorm";
+import { addNotification } from "../utils/addNoti";
+import { NOTI_TYPE } from "../constants";
 
 export class BookingService {
-  private movieRepo = AppDataSource.getRepository(Movie);
-  private theatreRepo = AppDataSource.getRepository(Theatre);
   private scheduleRepo = AppDataSource.getRepository(Schedule);
   private bookingRepo = AppDataSource.getRepository(Booking);
   private userRepo = AppDataSource.getRepository(User);
-  private ticketRepo = AppDataSource.getRepository(Ticket);
   private screenRepo = AppDataSource.getRepository(Screen);
 
   async getBookings(
@@ -23,7 +25,83 @@ export class BookingService {
     limit: number,
     sortBy: string,
     sortOrder: string,
+    staffID: string | null,
+    date: string,
+    search: string,
+    bookingStatus: string,
   ) {
+    let whereClause: any = {};
+    let staff: User | null = null;
+
+    if (staffID) {
+      staff = await this.userRepo.findOne({
+        relations: ["theatre"],
+        where: { id: parseInt(staffID) },
+      });
+    }
+
+    if (date) {
+      whereClause = { ...whereClause, bookingDate: date };
+    }
+
+    if (bookingStatus) {
+      whereClause = { ...whereClause, status: bookingStatus };
+    }
+
+    if (search) {
+      const staffWithSchedule = staff
+        ? { theatre: { id: staff?.theatre?.id } }
+        : {};
+      const staffWithoutSchedule = staff
+        ? { schedule: { theatre: { id: staff?.theatre?.id } } }
+        : {};
+      whereClause = [
+        {
+          id: Like(`%${search}%`),
+          ...whereClause,
+          ...staffWithoutSchedule,
+        },
+        {
+          schedule: {
+            movie: { title: Like(`%${search}%`) },
+            ...staffWithSchedule,
+          },
+          ...whereClause,
+        },
+        {
+          schedule: {
+            theatre: {
+              name: Like(`%${search}%`),
+              ...(staff ? { id: staff?.theatre?.id } : {}),
+            },
+          },
+          ...whereClause,
+        },
+        {
+          schedule: {
+            screen: { name: Like(`%${search}%`) },
+            ...staffWithSchedule,
+          },
+          ...whereClause,
+        },
+        {
+          customerName: Like(`%${search}%`),
+          ...whereClause,
+          ...staffWithoutSchedule,
+        },
+        {
+          customerEmail: Like(`%${search}%`),
+          ...whereClause,
+          ...staffWithoutSchedule,
+        },
+        {
+          user: { role: Like(`%${search}%`) },
+          ...whereClause,
+          ...staffWithoutSchedule,
+        },
+      ];
+    }
+
     const [bookings, total] = await this.bookingRepo.findAndCount({
       relations: [
         "schedule",
@@ -38,11 +116,58 @@ export class BookingService {
       },
       skip: (page - 1) * limit,
       take: limit,
+      where: Array.isArray(whereClause)
+        ? whereClause
+        : {
+            ...whereClause,
+            ...(staff
+              ? { schedule: { theatre: { id: staff?.theatre?.id } } }
+              : {}),
+          },
     });
+
+    const confirmedBookings = await this.bookingRepo.find({
+      select: ["totalAmount"],
+      where: Array.isArray(whereClause)
+        ? whereClause.map((wc) => ({ ...wc, status: "confirmed" }))
+        : { ...whereClause, status: "confirmed" },
+    });
+    const confirmed = confirmedBookings.length;
+    const totalRevenue = confirmedBookings.reduce(
+      (sum, b) => sum + Number(b.totalAmount),
+      0,
+    );
+
+    const cancelledBookings = await this.bookingRepo.find({
+      select: ["totalAmount"],
+      where: Array.isArray(whereClause)
+        ? whereClause.map((wc) => ({ ...wc, status: "cancelled" }))
+        : { ...whereClause, status: "cancelled" },
+    });
+    const cancelled = cancelledBookings.length;
+
+    const todayBookings = await this.bookingRepo.find({
+      select: ["totalAmount"],
+      where: {
+        bookingDate: dayjs().format("YYYY-MM-DD"),
+        ...(staffID ? { user: { id: parseInt(staffID) } } : {}),
+      },
+    });
+    const todayRevenue = todayBookings.reduce(
+      (sum, b) => sum + Number(b.totalAmount),
+      0,
+    );
 
     return {
       status: 200,
       data: bookings,
+      stats: {
+        total,
+        confirmed: bookingStatus === "cancelled" ? 0 : confirmed,
+        cancelled: bookingStatus === "confirmed" ? 0 : cancelled,
+        totalRevenue,
+        todayRevenue,
+      },
       pagination: {
         total,
         page,
@@ -149,19 +274,19 @@ export class BookingService {
       totalAmount,
     } = body;
 
-    const existingBooking = await this.bookingRepo.find({
-      where: { schedule: { id: parseInt(scheduleId) } },
-    });
-
-    const schedule = await this.scheduleRepo.findOneBy({
-      id: parseInt(scheduleId),
+    const schedule = await this.scheduleRepo.findOne({
+      relations: ["theatre", "movie"],
+      where: { id: parseInt(scheduleId) },
     });
 
     const user = await this.userRepo.findOneBy({
       id: parseInt(userId),
     });
 
-    if (!schedule.isActive) {
+    if (
+      schedule.status === ScheduleStatus.inActive ||
+      schedule.status === ScheduleStatus.completed
+    ) {
       throw new Error("This schedules is currently unavailable!.");
     }
 
@@ -191,7 +316,7 @@ export class BookingService {
       customerPhone,
       note,
       status: "confirmed",
-      bookingDate: new Date(),
+      bookingDate: dayjs().format("YYYY-MM-DD"),
     });
 
     const updatedSchedule = {
@@ -204,6 +329,20 @@ export class BookingService {
     const updatedBooking = await this.bookingRepo.save(newBooking);
     const show = await this.scheduleRepo.save(updatedSchedule);
     const booking = await generateTicket(updatedBooking, show);
+
+    // admin - all noti (role)
+    // staff - theatre only noti ( role, theatreId)
+
+    const message = `${user?.name} booked ${selectedSeats?.length} seats for ${
+      schedule?.movie?.title
+    } at ${schedule?.showDate} (${schedule?.showTime.slice(0, 5)}).`;
+
+    addNotification(
+      NOTI_TYPE.NEW_BOOKING,
+      "New Booking",
+      message,
+      schedule?.theatre?.id,
+    );
 
     return {
       status: 200,

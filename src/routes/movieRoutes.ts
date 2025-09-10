@@ -2,6 +2,7 @@ import express from "express";
 import {
   addMovie,
   deleteMovie,
+  getAllMovies,
   getMovieById,
   getMovies,
   getShowingMovies,
@@ -31,6 +32,7 @@ const router = express.Router();
 router.get("/movies/showing/list", getShowingMovies);
 
 router.get("/movies", getMovies);
+router.get("/movies/all", getAllMovies);
 router.get("/movies/:id", getMovieById);
 
 router.post(

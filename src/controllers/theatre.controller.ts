@@ -33,6 +33,21 @@ export const getTheatre = async (req: Request, res: Response) => {
   }
 };
 
+export const getAllTheatres = async (req: Request, res: Response) => {
+  try {
+    const theatreRepo = AppDataSource.getRepository(Theatre);
+    const theatres = await theatreRepo.find({
+      relations: ["screens", "schedules"],
+    });
+
+    res.status(200).json({
+      data: theatres,
+    });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
 export const getTheatreByShowingMovie = async (req: Request, res: Response) => {
   try {
     const movieId = req.query.movieId as string;

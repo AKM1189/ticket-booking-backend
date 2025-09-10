@@ -5,6 +5,8 @@ import { Image } from "../entity/Image";
 import { CastType } from "../types/CastType";
 import { promises as fs } from "fs";
 import { Movie } from "../entity/Movie";
+import { String } from "aws-sdk/clients/cloudsearch";
+import { Like } from "typeorm";
 
 export class CastService {
   private castRepo = AppDataSource.getRepository(Cast);
@@ -16,9 +18,19 @@ export class CastService {
     limit: number,
     sortBy: string,
     sortOrder: string,
+    search: String,
   ) {
+    let whereClause: any = {};
+
+    if (search) {
+      whereClause = [
+        { name: Like(`%${search}%`) },
+        { role: Like(`%${search}%`) },
+      ];
+    }
     const [casts, total] = await this.castRepo.findAndCount({
       relations: ["image"],
+      where: whereClause,
       order: {
         [sortBy]: sortOrder,
       },

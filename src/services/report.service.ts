@@ -6,6 +6,8 @@ import { Schedule } from "../entity/Schedule";
 import { Theatre } from "../entity/Theatre";
 import { MovieStatus } from "../types/MovieType";
 import { In } from "typeorm";
+import { User } from "../entity/User";
+import { Role } from "../types/AuthType";
 
 export class ReportService {
   private movieRepo = AppDataSource.getRepository(Movie);
@@ -13,7 +15,7 @@ export class ReportService {
   private scheduleRepo = AppDataSource.getRepository(Schedule);
   private bookingRepo = AppDataSource.getRepository(Booking);
 
-  async getCardInfo() {
+  async getCardInfo(user: User) {
     const [, movieTotal] = await this.movieRepo.findAndCount();
 
     const [, showingMovieTotal] = await this.movieRepo.findAndCount({
@@ -32,6 +34,15 @@ export class ReportService {
       (sum, b) => sum + Number(b.totalAmount),
       0,
     );
+
+    const whereClause =
+      user?.role === Role.staff
+        ? { user: { id: user?.id }, bookingDate: dayjs().format("YYYY-MM-DD") }
+        : { bookingDate: dayjs().format("YYYY-MM-DD") };
+
+    const [, todayTicketSales] = await this.bookingRepo.findAndCount({
+      where: whereClause,
+    });
 
     // get last 7 day revenue
     const result = await this.bookingRepo
@@ -95,11 +106,12 @@ export class ReportService {
         monthlyRevenue,
         showingMovieBookings,
         availableMovieBookings,
+        todayTicketSales,
       },
     };
   }
 
-  async recentRecords() {
+  async recentRecords(user: User) {
     const today = dayjs().format("YYYY-MM-DD");
     const upcomingSchedules = await this.scheduleRepo
       .createQueryBuilder("schedule")
@@ -111,7 +123,7 @@ export class ReportService {
       .addSelect("schedule.showTime", "showTime")
       .addSelect("schedule.bookedSeats", "bookedSeats")
       .addSelect("schedule.availableSeats", "availableSeats")
-      .addSelect("schedule.isActive", "isActive")
+      .addSelect("schedule.status", "status")
       .addSelect("movie.title", "movieTitle")
       .addSelect("theatre.name", "theatreName")
       .addSelect("screen.name", "screenName")
@@ -120,10 +132,11 @@ export class ReportService {
       .take(5)
       .getRawMany();
 
-    const recentBookings = await this.bookingRepo
+    const query = this.bookingRepo
       .createQueryBuilder("booking")
       .innerJoin("booking.schedule", "schedule")
       .innerJoin("schedule.movie", "movie")
+      .innerJoin("booking.user", "user")
       .select("booking.id", "id")
       .addSelect("booking.customerName", "customerName")
       .addSelect("booking.customerEmail", "customerEmail")
@@ -136,16 +149,12 @@ export class ReportService {
       .addSelect("movie.title", "movieTitle")
       .orderBy("booking.bookingDate", "DESC")
       .addOrderBy("booking.id", "DESC") // secondary order to ensure stable limit
-      .take(5)
-      .getRawMany();
+      .take(5);
 
-    // await this.bookingRepo.findAndCount({
-    //   relations: ["schedule", "schedule.movie"],
-    //   take: 10,
-    //   order: {
-    //     ["bookingDate"]: "DESC",
-    //   },
-    // });
+    if (user?.role === Role.staff) {
+      query.andWhere("user.id = :userId", { userId: user.id });
+    }
+    const recentBookings = await query.getRawMany();
 
     return {
       status: 200,

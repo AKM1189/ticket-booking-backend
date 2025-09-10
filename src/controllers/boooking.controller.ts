@@ -9,16 +9,31 @@ const bookingService = new BookingService();
 
 export const getBookings = async (req: Request, res: Response) => {
   try {
-    const { page, limit, sortBy, sortOrder } = getQueryParams(req, 1, 10, "id");
-    const { status, data, pagination } = await bookingService.getBookings(
+    const {
       page,
       limit,
       sortBy,
       sortOrder,
-    );
+      search,
+      status: bookingStatus,
+    } = getQueryParams(req, 1, 10, "id");
+    const staffID = req.query.staffID as string;
+    const date = req.query.date as string;
+    const { status, data, stats, pagination } =
+      await bookingService.getBookings(
+        page,
+        limit,
+        sortBy,
+        sortOrder,
+        staffID,
+        date,
+        search,
+        bookingStatus,
+      );
 
     res.status(status).json({
       data,
+      stats,
       pagination,
     });
   } catch (err) {

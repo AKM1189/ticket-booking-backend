@@ -11,6 +11,8 @@ import axios from "axios";
 import path from "path";
 import { promises as fs } from "fs";
 import { GenreType } from "../types/GenreType";
+import { addNotification } from "../utils/addNoti";
+import { NOTI_TYPE } from "../constants";
 
 export class MovieService {
   private movieRepo = AppDataSource.getRepository(Movie);
@@ -77,6 +79,10 @@ export class MovieService {
     });
 
     await this.movieRepo.save(newMovie);
+
+    const message = `New Movie ${title} has been added to the system.`;
+    addNotification(NOTI_TYPE.MOVIE_ADDED, "New Movie Added", message);
+
     return {
       status: 200,
       message: "Movie added successfully",
@@ -184,6 +190,10 @@ export class MovieService {
         await this.imageRepo.delete(img.id);
       }
     }
+
+    const message = `Movie ${existingMovie.title} details have been updated.`;
+    addNotification(NOTI_TYPE.MOVIE_UPDATED, "Movie Updated", message);
+
     return {
       status: 200,
       message: "Movie updated successfully.",
@@ -239,6 +249,10 @@ export class MovieService {
         await this.imageRepo.delete(img.id);
       }
     }
+
+    const message = `Movie ${existingMovie.title} has been deleted from the system.`;
+    addNotification(NOTI_TYPE.MOVIE_DELETED, "Movie Deleted", message);
+
     return {
       status: 200,
       message: "Movie deleted successfully.",

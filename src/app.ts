@@ -21,6 +21,7 @@ import bookingRoutes from "./routes/bookingRoutes";
 import userRoutes from "./routes/userRoutes";
 import dashboardRoutes from "./routes/reportRoutes";
 import profileRoutes from "./routes/profileRoutes";
+import notiRoutes from "./routes/notiRoutes";
 
 import { updateMovieStatus } from "./utils/updateMovieStatus";
 import { getBookedSeats } from "./utils/getBookedSeats";
@@ -78,6 +79,7 @@ export const createApp = async () => {
   app.use(adminUrl, dashboardRoutes);
   app.use(adminUrl, profileRoutes);
   app.use(adminUrl, userRoutes);
+  app.use(adminUrl, notiRoutes);
 
   return app;
 };
@@ -135,7 +137,7 @@ const startServer = async () => {
 
       tempSeats[scheduleId] = [
         ...temp,
-        { seatId, userId, expiresAt: Date.now() + 1000 * 60 * 1 },
+        { seatId, userId, expiresAt: Date.now() + 1000 * 30 },
       ];
 
       console.log("temp seats", tempSeats[scheduleId]);

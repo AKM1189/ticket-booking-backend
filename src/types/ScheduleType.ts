@@ -26,3 +26,10 @@ export type ScheduleBodyType = {
   language: string;
   subtitle: string;
 };
+
+export enum ScheduleStatus {
+  active = "Active",
+  inActive = "Inactive",
+  ongoing = "Ongoing",
+  completed = "Completed",
+}

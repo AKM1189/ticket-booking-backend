@@ -4,6 +4,7 @@ import { accessAsAdmin } from "../middlewares/auth.middleware";
 import {
   addTheatre,
   deleteTheatre,
+  getAllTheatres,
   getTheatre,
   getTheatreById,
   getTheatreByShowingMovie,
@@ -14,6 +15,7 @@ import { CreateTheatreDto } from "../dtos/theatre.dto";
 const router = express.Router();
 
 router.get("/theatres", getTheatre);
+router.get("/theatres/all", getAllTheatres);
 router.get("/theatres/:id", getTheatreById);
 router.get("/movie/schedules/theatres", getTheatreByShowingMovie);
 router.post(

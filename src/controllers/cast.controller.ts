@@ -8,12 +8,18 @@ const castService = new CastService();
 
 export const getCast = async (req: Request, res: Response) => {
   try {
-    const { page, limit, sortBy, sortOrder } = getQueryParams(req, 1, 10, "id");
+    const { page, limit, sortBy, sortOrder, search } = getQueryParams(
+      req,
+      1,
+      10,
+      "id",
+    );
     const { status, data, pagination } = await castService.getCast(
       page,
       limit,
       sortBy,
       sortOrder,
+      search,
     );
 
     res.status(status).json({

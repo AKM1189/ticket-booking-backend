@@ -83,16 +83,17 @@ export const accessAsAdmin = async (
       if (!email) {
         throw new Error("Invalid access token");
       }
-      if (role !== Role.admin) {
+      if (role !== Role.admin && role !== Role.staff) {
         throw new Error("You don't have access to this route.");
       }
-      const user = await userRepo.findOneBy({ email, role: Role.admin });
-      if (!user) {
+      const adminUser = await userRepo.findOneBy({ email, role: Role.admin });
+      const staffUser = await userRepo.findOneBy({ email, role: Role.staff });
+      if (!adminUser && !staffUser) {
         res.status(401).json({
           message: "User not found",
         });
       }
-      req.user = user; // Attach user to the request object
+      req.user = adminUser ? adminUser : staffUser; // Attach user to the request object
       next();
     } catch (err) {
       console.log("error admin", err);

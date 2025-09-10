@@ -33,7 +33,7 @@ export class Schedule {
   bookedSeats: string[];
 
   @Column()
-  isActive: boolean;
+  status: string;
 
   @Column()
   language: string;

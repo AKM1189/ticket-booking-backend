@@ -6,9 +6,11 @@ import { sendEmail } from "../utils/sendEmail";
 import { generatePassword } from "../utils/generatePassword";
 import bcrypt from "bcrypt";
 import { Like } from "typeorm";
+import { Theatre } from "../entity/Theatre";
 
 export class UserService {
   private userRepo = AppDataSource.getRepository(User);
+  private theatreRepo = AppDataSource.getRepository(Theatre);
 
   async getUsers(
     search: string,
@@ -58,32 +60,37 @@ export class UserService {
   }
 
   async addAdmin(body: UserBodyType) {
-    const { name, email, phoneNo } = body;
-
-    const existingName = await this.userRepo.findOneBy({ name });
-    if (existingName) {
-      throw new Error("Name already exists.");
-    }
+    const { name, email, phoneNo, role, theatreId } = body;
+    const userType =
+      role === Role.admin ? "Admin" : role === Role.staff ? "Staff" : "User";
 
     const existingEmail = await this.userRepo.findOneBy({
       email,
-      role: Role.admin,
     });
     if (existingEmail) {
       throw new Error("Email already exists.");
     }
 
+    if (role === Role.staff && !theatreId) {
+      throw new Error("Staff must belong to a theatre");
+    }
+
     const password = generatePassword(12);
     const hashedPassword = await bcrypt.hash(password, 10);
+
+    const theatre = await this.theatreRepo.findOneBy({
+      id: parseInt(theatreId),
+    });
 
     const newAdmin = this.userRepo.create({
       name,
       email,
       phoneNo,
       password: hashedPassword,
-      role: Role.admin,
+      role,
       active: true,
       createdAt: new Date(),
+      theatre: role === Role.staff ? theatre : null,
     });
 
     await this.userRepo.save(newAdmin);
@@ -92,7 +99,7 @@ export class UserService {
         <div style="font-family: Arial, sans-serif; background-color: #f9f9f9; padding: 20px;">
           <div style="max-width: 500px; margin: auto; background-color: #ffffff; padding: 30px; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); text-align: center;">
             <h2 style="color: #1b81d1;">Welcome To Movie Palace</h2>
-            <p style="color: #333;">Your <b>admin account</b> created successfully. You can use these <b>credentials</b> provide below to access our admin dashboard.</p>
+            <p style="color: #333;">Your <b>${body.role} account</b> created successfully. You can use these <b>credentials</b> provide below to access our admin dashboard.</p>
             <div>Email - ${email}</div>
             <div>Password - ${password}</div>
             <p style="font-size: 12px; color: #aaa; margin-top: 30px;">© 2025 Movie Palace</p>
@@ -100,31 +107,75 @@ export class UserService {
         </div>
       `;
 
-    sendEmail(email, "Admin Account Credentials - Movie Palace 🎟️", content);
+    sendEmail(
+      email,
+      `${userType} Account Credentials - Movie Palace 🎟️`,
+      content,
+    );
 
     return {
       status: 200,
-      message: "Admin added successfully",
+      message: `${userType} added successfully`,
       data: newAdmin,
     };
   }
 
+  // async addStaff(body: UserBodyType) {
+  //   const { name, email, phoneNo } = body;
+
+  //   const existingEmail = await this.userRepo.findOneBy({
+  //     email,
+  //     role: Role.staff,
+  //   });
+  //   if (existingEmail) {
+  //     throw new Error("Email already exists.");
+  //   }
+
+  //   const password = generatePassword(12);
+  //   const hashedPassword = await bcrypt.hash(password, 10);
+
+  //   const newStaff = this.userRepo.create({
+  //     name,
+  //     email,
+  //     phoneNo,
+  //     password: hashedPassword,
+  //     role: Role.staff,
+  //     active: true,
+  //     createdAt: new Date(),
+  //   });
+
+  //   await this.userRepo.save(newStaff);
+
+  //   const content = `
+  //       <div style="font-family: Arial, sans-serif; background-color: #f9f9f9; padding: 20px;">
+  //         <div style="max-width: 500px; margin: auto; background-color: #ffffff; padding: 30px; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); text-align: center;">
+  //           <h2 style="color: #1b81d1;">Welcome To Movie Palace</h2>
+  //           <p style="color: #333;">Your <b>staff account</b> created successfully. You can use these <b>credentials</b> provide below to access our admin dashboard.</p>
+  //           <div>Email - ${email}</div>
+  //           <div>Password - ${password}</div>
+  //           <p style="font-size: 12px; color: #aaa; margin-top: 30px;">© 2025 Movie Palace</p>
+  //         </div>
+  //       </div>
+  //     `;
+
+  //   sendEmail(email, "Staff Account Credentials - Movie Palace 🎟️", content);
+
+  //   return {
+  //     status: 200,
+  //     message: "Staff added successfully",
+  //     data: newStaff,
+  //   };
+  // }
+
   async updateUser(userId: number, body: UserBodyType & { role: Role }) {
     const { name, email, phoneNo, role } = body;
-    const userType = role === Role.admin ? "Admin" : "User";
+    const userType =
+      role === Role.admin ? "Admin" : role === Role.staff ? "Staff" : "User";
     const existingUserById = await this.userRepo.findOneBy({ id: userId });
     if (!existingUserById) {
       return {
         status: 404,
         message: userType + " not found.",
-      };
-    }
-
-    const existingUserByName = await this.userRepo.findOneBy({ name });
-    if (existingUserByName && existingUserByName.id !== userId) {
-      return {
-        status: 400,
-        message: userType + " name already exists.",
       };
     }
 

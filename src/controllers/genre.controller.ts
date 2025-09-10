@@ -8,17 +8,35 @@ const genreService = new GenreService();
 
 export const getGenre = async (req: Request, res: Response) => {
   try {
-    const { page, limit, sortBy, sortOrder } = getQueryParams(req, 1, 10, "id");
+    const { page, limit, sortBy, sortOrder, search } = getQueryParams(
+      req,
+      1,
+      10,
+      "id",
+    );
     const { status, data, pagination } = await genreService.getGenre(
       page,
       limit,
       sortBy,
       sortOrder,
+      search,
     );
 
     res.status(status).json({
       data,
       pagination,
+    });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+export const getAllGenre = async (req: Request, res: Response) => {
+  try {
+    const { status, data } = await genreService.getAllGenre();
+
+    res.status(status).json({
+      data,
     });
   } catch (err) {
     res.status(500).json({ message: err.message });

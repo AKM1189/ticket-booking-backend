@@ -16,8 +16,8 @@ export class Booking {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column()
-  bookingDate: Date;
+  @Column({ type: "date" })
+  bookingDate: string;
 
   @Column("simple-array")
   seatList: string[];

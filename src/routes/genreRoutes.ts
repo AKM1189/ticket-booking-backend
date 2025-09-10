@@ -2,6 +2,7 @@ import express from "express";
 import {
   addGenre,
   deleteGenre,
+  getAllGenre,
   getGenre,
   getGenreById,
   updateGenre,
@@ -13,6 +14,7 @@ import { accessAsAdmin, protect } from "../middlewares/auth.middleware";
 const router = express.Router();
 
 router.get("/genres", getGenre);
+router.get("/genres/all", getAllGenre);
 router.get("/genres/:id", getGenreById);
 router.post("/genres", accessAsAdmin, validateDto(CreateGenreDto), addGenre);
 router.put(

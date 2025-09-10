@@ -61,6 +61,20 @@ export const getMovies = async (req: Request, res: Response) => {
   }
 };
 
+export const getAllMovies = async (req: Request, res: Response) => {
+  try {
+    const movieRepository = AppDataSource.getRepository(Movie);
+
+    const movies = await movieRepository.find();
+
+    res.status(200).json({
+      data: movies,
+    });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
 export const getShowingMovies = async (req: Request, res: Response) => {
   try {
     const today = dayjs().format("YYYY-MM-DD");
@@ -78,6 +92,9 @@ export const getShowingMovies = async (req: Request, res: Response) => {
         `(schedule.showDate = :today AND schedule.showTime >= :time) OR (schedule.showDate > :today)`,
         { today, time },
       )
+      .andWhere("movie.status IN (:...statuses)", {
+        statuses: [MovieStatus.nowShowing, MovieStatus.ticketAvailable],
+      })
       .distinct(true)
       .getMany();
 

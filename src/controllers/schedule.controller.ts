@@ -6,12 +6,21 @@ const scheduleService = new ScheduleService();
 
 export const getSchedule = async (req: Request, res: Response) => {
   try {
-    const { page, limit, sortBy, sortOrder } = getQueryParams(req, 1, 10, "id");
+    const { page, limit, sortBy, sortOrder, search } = getQueryParams(
+      req,
+      1,
+      10,
+      "id",
+    );
+    const date = req.query.date as string;
+
     const { status, data, pagination } = await scheduleService.getSchedule(
       page,
       limit,
       sortBy,
       sortOrder,
+      search,
+      date,
     );
 
     res.status(status).json({

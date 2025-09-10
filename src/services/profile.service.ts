@@ -7,10 +7,8 @@ export class ProfileService {
   private userRepo = AppDataSource.getRepository(User);
   private imageRepo = AppDataSource.getRepository(Image);
 
-  async updateProfile(userId: number, body, imageUrl: string) {
+  async updateProfile(userId: number, body, imageUrl: string | null) {
     const { name, email, phoneNo, image } = body;
-
-    const profileImage = await this.imageRepo.save({ url: imageUrl });
 
     const user = await this.userRepo.findOne({
       relations: ["image"],
@@ -24,7 +22,10 @@ export class ProfileService {
     user.name = name;
     user.email = email;
     user.phoneNo = phoneNo;
-    user.image = profileImage;
+    if (imageUrl) {
+      const profileImage = await this.imageRepo.save({ url: imageUrl });
+      user.image = profileImage;
+    }
 
     await this.userRepo.save(user);
 

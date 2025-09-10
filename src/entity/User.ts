@@ -5,9 +5,13 @@ import {
   OneToOne,
   JoinColumn,
   OneToMany,
+  ManyToOne,
 } from "typeorm";
 import { Image } from "./Image";
 import { Booking } from "./Booking";
+import { Theatre } from "./Theatre";
+import { UserNotification } from "./UserNotification";
+import { Notification } from "./Notification";
 
 @Entity()
 export class User {
@@ -44,4 +48,16 @@ export class User {
 
   @OneToMany(() => Booking, (booking) => booking.user)
   bookings: Booking;
+
+  @ManyToOne(() => Theatre, (theatre) => theatre.staffs, {
+    nullable: true,
+    onDelete: "SET NULL",
+  })
+  theatre?: Theatre;
+
+  @OneToMany(
+    () => UserNotification,
+    (userNotification) => userNotification.notification,
+  )
+  notifications: UserNotification[];
 }

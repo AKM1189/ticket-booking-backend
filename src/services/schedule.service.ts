@@ -4,13 +4,18 @@ import { Movie } from "../entity/Movie";
 import { Schedule } from "../entity/Schedule";
 import { Screen } from "../entity/Screen";
 import { Theatre } from "../entity/Theatre";
-import { ScheduleBodyType, ScheduleType } from "../types/ScheduleType";
+import {
+  ScheduleBodyType,
+  ScheduleStatus,
+  ScheduleType,
+} from "../types/ScheduleType";
 import utc from "dayjs/plugin/utc";
 import timezone from "dayjs/plugin/timezone";
 import { SeatType } from "../entity/SeatType";
 import { ScheduleSeatType } from "../entity/ScheduleSeatType";
 import { updateMovieStatus } from "../utils/updateMovieStatus";
-import { updateMovie } from "../utils/updateMovie";
+import { updateMovie } from "../utils/updateStatus";
+import { Like } from "typeorm";
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
@@ -30,14 +35,44 @@ export class ScheduleService {
     limit: number,
     sortBy: string,
     sortOrder: string,
+    search: string,
+    date: string,
   ) {
+    let whereClause: any = {};
+
+    if (search && date) {
+      whereClause = [
+        { showDate: date, movie: { title: Like(`%${search}%`) } },
+        { showDate: date, theatre: { name: Like(`%${search}%`) } },
+        { showDate: date, screen: { name: Like(`%${search}%`) } },
+        { showDate: date, showTime: Like(`%${search}%`) },
+        { showDate: date, status: Like(`%${search}%`) },
+      ];
+    } else if (search) {
+      whereClause = [
+        { movie: { title: Like(`%${search}%`) } },
+        { theatre: { name: Like(`%${search}%`) } },
+        { screen: { name: Like(`%${search}%`) } },
+        { showTime: Like(`%${search}%`) },
+        { status: Like(`%${search}%`) },
+      ];
+    } else {
+      whereClause = { showDate: date };
+    }
     const [schedules, total] = await this.scheduleRepo.findAndCount({
-      relations: ["movie", "theatre", "screen"],
+      relations: [
+        "movie",
+        "theatre",
+        "screen",
+        "seatTypes",
+        "screen.seatTypes.seatType",
+      ],
       order: {
         [sortBy]: sortOrder,
       },
       skip: (page - 1) * limit,
       take: limit,
+      where: whereClause,
     });
 
     const seatTypes = await this.seatTypeRepo.find();
@@ -87,7 +122,9 @@ export class ScheduleService {
       .andWhere("schedule.screenId = :screenId", { screenId })
       .andWhere("schedule.showDate = :showDate", { showDate })
       .andWhere("schedule.showTime = :showTime", { showTime })
-      .andWhere("schedule.isActive = 1")
+      .andWhere("schedule.status != :status", {
+        status: ScheduleStatus.inActive,
+      })
       .getMany();
 
     const screen = await this.screenRepo.findOne({
@@ -122,12 +159,13 @@ export class ScheduleService {
       .where("schedule.movieId = :movieId", { movieId })
       .andWhere("schedule.theatreId = :theatreId", { theatreId })
       .andWhere("schedule.screenId = :screenId", { screenId })
-      .andWhere("schedule.isActive = 1")
+      .andWhere("schedule.status NOT IN (:...statuses)", {
+        statuses: [ScheduleStatus.inActive, ScheduleStatus.completed],
+      })
       .andWhere(
         `((schedule.showDate = :today AND schedule.showTime >= :time) OR (schedule.showDate > :today))`,
         { today, time },
       )
-      .andWhere("schedule.isActive = 1")
       .getRawMany();
 
     const formattedShowDates = showDates.map((date) =>
@@ -160,8 +198,12 @@ export class ScheduleService {
       //   `((schedule.showDate = :today AND schedule.showTime >= :time) OR (schedule.showDate > :today))`,
       //   { today, time },
       // )
-      .andWhere("schedule.isActive = 1")
+      .andWhere("schedule.status NOT IN (:...statuses)", {
+        statuses: [ScheduleStatus.inActive, ScheduleStatus.completed],
+      })
       .getRawMany();
+
+    console.log("show time", showTimes);
 
     const formattedShowDates = showTimes.map((time) =>
       time.showTime.slice(0, 5),
@@ -218,7 +260,7 @@ export class ScheduleService {
       showTime,
       multiplier: parseFloat(body.multiplier),
       availableSeats: body.availableSeats,
-      isActive: body.isActive,
+      status: body.isActive ? ScheduleStatus.active : ScheduleStatus.inActive,
       language,
       subtitle,
       movie,
@@ -301,7 +343,7 @@ export class ScheduleService {
       showTime,
       multiplier: parseFloat(body.multiplier),
       availableSeats: body.availableSeats,
-      isActive: body.isActive,
+      status: !body.isActive ? ScheduleStatus.inActive : schedule.status,
       language,
       subtitle,
       movie: movie,
