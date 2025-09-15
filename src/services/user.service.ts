@@ -7,6 +7,8 @@ import { generatePassword } from "../utils/generatePassword";
 import bcrypt from "bcrypt";
 import { Like } from "typeorm";
 import { Theatre } from "../entity/Theatre";
+import { addNotification } from "../utils/addNoti";
+import { NOTI_TYPE } from "../constants";
 
 export class UserService {
   private userRepo = AppDataSource.getRepository(User);
@@ -39,6 +41,7 @@ export class UserService {
     }
 
     const [users, total] = await this.userRepo.findAndCount({
+      relations: ["theatre"],
       order: {
         [sortBy]: sortOrder,
       },
@@ -46,7 +49,7 @@ export class UserService {
       take: limit,
       where: whereClause,
     });
-
+    console.log("users", users);
     return {
       status: 200,
       data: users,
@@ -59,7 +62,7 @@ export class UserService {
     };
   }
 
-  async addAdmin(body: UserBodyType) {
+  async addAdmin(body: UserBodyType, user: User) {
     const { name, email, phoneNo, role, theatreId } = body;
     const userType =
       role === Role.admin ? "Admin" : role === Role.staff ? "Staff" : "User";
@@ -78,9 +81,11 @@ export class UserService {
     const password = generatePassword(12);
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    const theatre = await this.theatreRepo.findOneBy({
-      id: parseInt(theatreId),
-    });
+    const theatre = theatreId
+      ? await this.theatreRepo.findOneBy({
+          id: parseInt(theatreId),
+        })
+      : null;
 
     const newAdmin = this.userRepo.create({
       name,
@@ -113,6 +118,15 @@ export class UserService {
       content,
     );
 
+    const message = `${user?.name} added New Admin '${newAdmin?.name}'.`;
+
+    addNotification(
+      NOTI_TYPE.USER_ADDED,
+      userType + " Added",
+      message,
+      user?.id,
+    );
+
     return {
       status: 200,
       message: `${userType} added successfully`,
@@ -120,55 +134,12 @@ export class UserService {
     };
   }
 
-  // async addStaff(body: UserBodyType) {
-  //   const { name, email, phoneNo } = body;
-
-  //   const existingEmail = await this.userRepo.findOneBy({
-  //     email,
-  //     role: Role.staff,
-  //   });
-  //   if (existingEmail) {
-  //     throw new Error("Email already exists.");
-  //   }
-
-  //   const password = generatePassword(12);
-  //   const hashedPassword = await bcrypt.hash(password, 10);
-
-  //   const newStaff = this.userRepo.create({
-  //     name,
-  //     email,
-  //     phoneNo,
-  //     password: hashedPassword,
-  //     role: Role.staff,
-  //     active: true,
-  //     createdAt: new Date(),
-  //   });
-
-  //   await this.userRepo.save(newStaff);
-
-  //   const content = `
-  //       <div style="font-family: Arial, sans-serif; background-color: #f9f9f9; padding: 20px;">
-  //         <div style="max-width: 500px; margin: auto; background-color: #ffffff; padding: 30px; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); text-align: center;">
-  //           <h2 style="color: #1b81d1;">Welcome To Movie Palace</h2>
-  //           <p style="color: #333;">Your <b>staff account</b> created successfully. You can use these <b>credentials</b> provide below to access our admin dashboard.</p>
-  //           <div>Email - ${email}</div>
-  //           <div>Password - ${password}</div>
-  //           <p style="font-size: 12px; color: #aaa; margin-top: 30px;">© 2025 Movie Palace</p>
-  //         </div>
-  //       </div>
-  //     `;
-
-  //   sendEmail(email, "Staff Account Credentials - Movie Palace 🎟️", content);
-
-  //   return {
-  //     status: 200,
-  //     message: "Staff added successfully",
-  //     data: newStaff,
-  //   };
-  // }
-
-  async updateUser(userId: number, body: UserBodyType & { role: Role }) {
-    const { name, email, phoneNo, role } = body;
+  async updateUser(
+    userId: number,
+    body: UserBodyType & { role: Role },
+    user: User,
+  ) {
+    const { name, email, phoneNo, role, theatreId } = body;
     const userType =
       role === Role.admin ? "Admin" : role === Role.staff ? "Staff" : "User";
     const existingUserById = await this.userRepo.findOneBy({ id: userId });
@@ -187,9 +158,20 @@ export class UserService {
       };
     }
 
-    const updatedUser = { ...existingUserById, name, email, phoneNo };
+    const theatre = await this.theatreRepo.findOneBy({
+      id: parseInt(theatreId),
+    });
+    if (!theatre) {
+      throw new Error("Theatre does not exist for assignment");
+    }
+
+    const updatedUser = { ...existingUserById, name, email, phoneNo, theatre };
 
     const saved = await this.userRepo.save(updatedUser);
+
+    const message = `${user.name} updated ${saved.name} details.`;
+
+    addNotification(NOTI_TYPE.USER_UPDATED, "User Updated", message, user.id);
 
     return {
       status: 200,
@@ -198,7 +180,7 @@ export class UserService {
     };
   }
 
-  async deactivateUser(userId: number) {
+  async deactivateUser(userId: number, actor: User) {
     const user = await this.userRepo.findOneBy({ id: userId });
 
     if (!user) {
@@ -208,6 +190,17 @@ export class UserService {
       };
     }
     await this.userRepo.save({ ...user, active: !user.active });
+
+    const message = `${actor?.name} ${
+      user.active ? "deactivated" : "activated"
+    } ${user?.name} (${user?.role}) account.`;
+
+    addNotification(
+      user.active ? NOTI_TYPE.USER_DEACTIVATED : NOTI_TYPE.USER_ACTIVATED,
+      `User ${user.active ? "Deactivated" : "Activated"}`,
+      message,
+      actor?.id,
+    );
 
     return {
       status: 200,

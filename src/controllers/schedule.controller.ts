@@ -6,6 +6,7 @@ const scheduleService = new ScheduleService();
 
 export const getSchedule = async (req: Request, res: Response) => {
   try {
+    const user = req.user;
     const { page, limit, sortBy, sortOrder, search } = getQueryParams(
       req,
       1,
@@ -21,6 +22,7 @@ export const getSchedule = async (req: Request, res: Response) => {
       sortOrder,
       search,
       date,
+      user,
     );
 
     res.status(status).json({
@@ -105,8 +107,10 @@ export const getShowTime = async (req: Request, res: Response) => {
 
 export const addSchedule = async (req: Request, res: Response) => {
   try {
+    const user = req.user;
     const { status, message, data } = await scheduleService.addSchedule(
       req.body,
+      user,
     );
     res.status(status).json({
       status,
@@ -122,9 +126,11 @@ export const updateSchedule = async (req: Request, res: Response) => {
   const scheduleId = parseInt(req.params.id as string);
 
   try {
+    const user = req.user;
     const { status, message, data } = await scheduleService.updateSchedule(
       scheduleId,
       req.body,
+      user,
     );
     res.status(status).json({
       status,
@@ -138,9 +144,11 @@ export const updateSchedule = async (req: Request, res: Response) => {
 
 export const deleteSchedule = async (req: Request, res: Response) => {
   try {
+    const user = req.user;
     const scheduleId = parseInt(req.params.id as string);
     const { status, message } = await scheduleService.deleteSchedule(
       scheduleId,
+      user,
     );
     res.status(status).json({
       status,

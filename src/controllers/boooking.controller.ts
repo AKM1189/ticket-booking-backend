@@ -23,8 +23,8 @@ export const getBookings = async (req: Request, res: Response) => {
       await bookingService.getBookings(
         page,
         limit,
-        sortBy,
-        sortOrder,
+        "bookingDate",
+        "DESC",
         staffID,
         date,
         search,
@@ -72,7 +72,11 @@ export const addBooking = async (req: Request, res: Response) => {
 export const cancelBooking = async (req: Request, res: Response) => {
   try {
     const bookingId = req.params.id as string;
-    const { status, message } = await bookingService.cancelBooking(bookingId);
+    const user = req.user;
+    const { status, message } = await bookingService.cancelBooking(
+      bookingId,
+      user,
+    );
     res.status(status).json({
       status,
       message,

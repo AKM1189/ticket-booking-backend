@@ -25,6 +25,7 @@ import notiRoutes from "./routes/notiRoutes";
 
 import { updateMovieStatus } from "./utils/updateMovieStatus";
 import { getBookedSeats } from "./utils/getBookedSeats";
+import { initSocket } from "./socket";
 
 dotenv.config();
 
@@ -84,6 +85,12 @@ export const createApp = async () => {
   return app;
 };
 
+interface TempSeat {
+  seatId: string;
+  userId: string;
+  expiresAt: number; // timestamp when the 2 minutes expire
+}
+
 // Main server startup
 const startServer = async () => {
   const app = await createApp();
@@ -92,20 +99,7 @@ const startServer = async () => {
   const server = createServer(app);
 
   // Attach Socket.IO
-  const io = new Server(server, {
-    cors: {
-      origin:
-        process.env.NODE_ENV === "production"
-          ? [process.env.PRODUCTION_FRONTEND_URL]
-          : ["http://localhost:5178"],
-      credentials: true,
-    },
-  });
-  interface TempSeat {
-    seatId: string;
-    userId: string;
-    expiresAt: number; // timestamp when the 2 minutes expire
-  }
+  const io = initSocket(server);
 
   const tempSeats: Record<string, TempSeat[]> = {};
 

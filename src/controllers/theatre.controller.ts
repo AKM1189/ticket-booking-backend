@@ -80,7 +80,11 @@ export const getTheatreById = async (req: Request, res: Response) => {
 
 export const addTheatre = async (req: Request, res: Response) => {
   try {
-    const { status, message, data } = await theatreService.addTheatre(req.body);
+    const user = req.user;
+    const { status, message, data } = await theatreService.addTheatre(
+      req.body,
+      user,
+    );
     res.status(status).json({
       status,
       message,
@@ -94,9 +98,11 @@ export const addTheatre = async (req: Request, res: Response) => {
 export const updateTheatre = async (req: Request, res: Response) => {
   try {
     const theatreId = parseInt(req.params.id as string);
+    const user = req.user;
     const { status, message, data } = await theatreService.updateTheatre(
       theatreId,
       req.body,
+      user,
     );
     res.status(status).json({
       status,
@@ -111,7 +117,11 @@ export const updateTheatre = async (req: Request, res: Response) => {
 export const deleteTheatre = async (req: Request, res: Response) => {
   try {
     const theatreId = parseInt(req.params.id as string);
-    const { status, message } = await theatreService.deleteTheatre(theatreId);
+    const user = req.user;
+    const { status, message } = await theatreService.deleteTheatre(
+      theatreId,
+      user,
+    );
     res.status(status).json({
       status,
       message,

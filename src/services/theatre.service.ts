@@ -5,6 +5,9 @@ import { Theatre } from "../entity/Theatre";
 import { GenreType } from "../types/GenreType";
 import { TheatreInputType } from "../types/TheatreType";
 import dayjs from "dayjs";
+import { User } from "../entity/User";
+import { addNotification } from "../utils/addNoti";
+import { NOTI_TYPE } from "../constants";
 
 export class TheatreService {
   private theatreRepo = AppDataSource.getRepository(Theatre);
@@ -84,7 +87,7 @@ export class TheatreService {
     };
   }
 
-  async addTheatre(body: TheatreInputType) {
+  async addTheatre(body: TheatreInputType, user: User) {
     const { name, location } = body;
 
     const existingName = await this.theatreRepo.findOneBy({ name });
@@ -103,14 +106,25 @@ export class TheatreService {
       active: true,
     });
 
-    await this.theatreRepo.save(newTheatre);
+    const theatre = await this.theatreRepo.save(newTheatre);
+
+    const message = `${user.name} added ${theatre.name} theatre.`;
+
+    addNotification(
+      NOTI_TYPE.THEATRE_ADDED,
+      "Theatre Added",
+      message,
+      user.id,
+      theatre?.id,
+    );
+
     return {
       status: 200,
       message: "Theatre added successfully",
       data: newTheatre,
     };
   }
-  async updateTheatre(TheatreId: number, body: TheatreInputType) {
+  async updateTheatre(TheatreId: number, body: TheatreInputType, user: User) {
     const { name, location } = body;
 
     const existingTheatreById = await this.theatreRepo.findOneBy({
@@ -146,6 +160,16 @@ export class TheatreService {
     const updatedTheatre = { ...existingTheatreById, ...body };
     const saved = await this.theatreRepo.save(updatedTheatre);
 
+    const message = `${user.name} updated ${saved.name} theatre details.`;
+
+    addNotification(
+      NOTI_TYPE.THEATRE_UPDATED,
+      "Theatre Updated",
+      message,
+      user.id,
+      existingTheatreById?.id,
+    );
+
     return {
       status: 200,
       message: "Theatre updated successfully.",
@@ -153,7 +177,7 @@ export class TheatreService {
     };
   }
 
-  async deleteTheatre(theatreId: number) {
+  async deleteTheatre(theatreId: number, user: User) {
     const theatre = await this.theatreRepo.findOneBy({ id: theatreId });
 
     if (!theatre) {
@@ -164,6 +188,19 @@ export class TheatreService {
     }
 
     await this.theatreRepo.save({ ...theatre, active: !theatre.active });
+
+    const message = `${user.name} updated ${theatre.name} theatre details.`;
+
+    addNotification(
+      theatre.active
+        ? NOTI_TYPE.THEATRE_DEACTIVATED
+        : NOTI_TYPE.THEATRE_ACTIVATED,
+      `Theatre ${theatre.active ? "Deactivated" : "Activated"}`,
+      message,
+      user.id,
+      theatre?.id,
+    );
+
     return {
       status: 200,
       message: `Theatre ${

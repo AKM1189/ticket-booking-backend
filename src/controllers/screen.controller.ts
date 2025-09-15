@@ -85,7 +85,11 @@ export const getGenreById = async (req: Request, res: Response) => {
 
 export const addScreen = async (req: Request, res: Response) => {
   try {
-    const { status, message, data } = await screenService.addScreen(req.body);
+    const user = req.user;
+    const { status, message, data } = await screenService.addScreen(
+      req.body,
+      user,
+    );
     res.status(status).json({
       status,
       message,
@@ -98,10 +102,12 @@ export const addScreen = async (req: Request, res: Response) => {
 
 export const updateScreen = async (req: Request, res: Response) => {
   try {
+    const user = req.user;
     const screenId = parseInt(req.params.id as string);
     const { status, message, data } = await screenService.updateScreen(
       screenId,
       req.body,
+      user,
     );
     res.status(status).json({
       status,
@@ -115,8 +121,12 @@ export const updateScreen = async (req: Request, res: Response) => {
 
 export const deleteScreen = async (req: Request, res: Response) => {
   try {
+    const user = req.user;
     const screenId = parseInt(req.params.id as string);
-    const { status, message } = await screenService.deleteScreen(screenId);
+    const { status, message } = await screenService.deleteScreen(
+      screenId,
+      user,
+    );
     res.status(status).json({
       status,
       message,

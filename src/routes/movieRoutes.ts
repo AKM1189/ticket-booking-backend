@@ -29,7 +29,7 @@ const router = express.Router();
 // });
 // const upload = multer({ storage });
 
-router.get("/movies/showing/list", getShowingMovies);
+router.get("/movies/showing/list", accessAsAdmin, getShowingMovies);
 
 router.get("/movies", getMovies);
 router.get("/movies/all", getAllMovies);

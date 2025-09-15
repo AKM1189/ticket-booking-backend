@@ -13,6 +13,7 @@ import { promises as fs } from "fs";
 import { GenreType } from "../types/GenreType";
 import { addNotification } from "../utils/addNoti";
 import { NOTI_TYPE } from "../constants";
+import { User } from "../entity/User";
 
 export class MovieService {
   private movieRepo = AppDataSource.getRepository(Movie);
@@ -20,7 +21,12 @@ export class MovieService {
   private castRepo = AppDataSource.getRepository(Cast);
   private imageRepo = AppDataSource.getRepository(Image);
 
-  async addMovie(body: MovieType, posterUrl: string, photoUrls: string[]) {
+  async addMovie(
+    body: MovieType,
+    posterUrl: string,
+    photoUrls: string[],
+    user: User,
+  ) {
     const {
       title,
       description,
@@ -80,8 +86,13 @@ export class MovieService {
 
     await this.movieRepo.save(newMovie);
 
-    const message = `New Movie ${title} has been added to the system.`;
-    addNotification(NOTI_TYPE.MOVIE_ADDED, "New Movie Added", message);
+    const message = `${user.name} added New Movie ${title} to the system.`;
+    addNotification(
+      NOTI_TYPE.MOVIE_ADDED,
+      "New Movie Added",
+      message,
+      user?.id,
+    );
 
     return {
       status: 200,
@@ -95,6 +106,7 @@ export class MovieService {
     body: Partial<MovieType>,
     posterUrl: string | null,
     photoUrls: string[],
+    user: User,
   ) {
     const existingMovie = await this.movieRepo.findOne({
       where: { id: movieId },
@@ -191,8 +203,8 @@ export class MovieService {
       }
     }
 
-    const message = `Movie ${existingMovie.title} details have been updated.`;
-    addNotification(NOTI_TYPE.MOVIE_UPDATED, "Movie Updated", message);
+    const message = `${user.name} updated Movie ${existingMovie.title} details.`;
+    addNotification(NOTI_TYPE.MOVIE_UPDATED, "Movie Updated", message, user.id);
 
     return {
       status: 200,
@@ -200,16 +212,20 @@ export class MovieService {
     };
   }
 
-  async deleteMovie(movieId: number) {
+  async deleteMovie(movieId: number, user: User) {
     const existingMovie = await this.movieRepo.findOne({
       where: { id: movieId },
-      relations: ["genres"],
+      relations: ["genres", "schedules"],
     });
     if (!existingMovie) {
       return {
         status: 404,
         message: "Movie not found",
       };
+    }
+
+    if (existingMovie.schedules?.length > 0) {
+      throw new Error("Delete all schedules for this movie first.");
     }
     await this.processGenreMovieCount([], existingMovie.genres);
     await this.movieRepo.remove(existingMovie);
@@ -250,8 +266,8 @@ export class MovieService {
       }
     }
 
-    const message = `Movie ${existingMovie.title} has been deleted from the system.`;
-    addNotification(NOTI_TYPE.MOVIE_DELETED, "Movie Deleted", message);
+    const message = `${user.name} deleted Movie ${existingMovie.title} from the system.`;
+    addNotification(NOTI_TYPE.MOVIE_DELETED, "Movie Deleted", message, user.id);
 
     return {
       status: 200,

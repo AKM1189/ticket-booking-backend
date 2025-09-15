@@ -12,7 +12,7 @@ import { accessAsAdmin } from "../middlewares/auth.middleware";
 
 const router = express.Router();
 
-router.get("/schedules", getSchedule);
+router.get("/schedules", accessAsAdmin, getSchedule);
 router.get("/schedules/showDate", getShowDate);
 router.get("/schedules/showTime", getShowTime);
 router.get("/schedules/show-details", getScheduleByShowDetail);

@@ -7,6 +7,8 @@ import { Like } from "typeorm";
 import { MulterFileWithLocation } from "../types/multer-s3-type";
 import dayjs from "dayjs";
 import { MovieStatus } from "../types/MovieType";
+import { Role } from "../types/AuthType";
+import { Theatre } from "../entity/Theatre";
 
 const movieService = new MovieService();
 export const getMovies = async (req: Request, res: Response) => {
@@ -77,10 +79,11 @@ export const getAllMovies = async (req: Request, res: Response) => {
 
 export const getShowingMovies = async (req: Request, res: Response) => {
   try {
+    const user = req.user;
     const today = dayjs().format("YYYY-MM-DD");
     const time = dayjs().format("HH:mm:ss");
 
-    const movies = await AppDataSource.getRepository(Movie)
+    const movieQuery = await AppDataSource.getRepository(Movie)
       .createQueryBuilder("movie")
       .innerJoin("movie.schedules", "schedule")
       .leftJoinAndSelect("movie.genres", "genres")
@@ -92,11 +95,26 @@ export const getShowingMovies = async (req: Request, res: Response) => {
         `(schedule.showDate = :today AND schedule.showTime >= :time) OR (schedule.showDate > :today)`,
         { today, time },
       )
+
       .andWhere("movie.status IN (:...statuses)", {
         statuses: [MovieStatus.nowShowing, MovieStatus.ticketAvailable],
       })
-      .distinct(true)
-      .getMany();
+      .distinct(true);
+
+    console.log("user role", user?.role);
+    if (user?.role === Role.staff) {
+      const theatre = await AppDataSource.getRepository(Theatre).findOne({
+        relations: ["staffs"],
+        where: { staffs: { id: user?.id } },
+      });
+      if (theatre) {
+        movieQuery
+          .innerJoin("schedule.theatre", "theatre")
+          .andWhere("theatre.id = :id", { id: theatre.id });
+      }
+    }
+
+    const movies = await movieQuery.getMany();
 
     res.status(200).json({
       data: movies,
@@ -120,11 +138,14 @@ export const addMovie = async (req: Request, res: Response) => {
     return `${req.protocol}://${req.get("host")}/uploads/${file.filename}`;
   });
 
+  const user = req.user;
+
   try {
     const { status, message, data } = await movieService.addMovie(
       req.body,
       posterUrl,
       photoUrls,
+      user,
     );
 
     res.status(status).json({
@@ -155,6 +176,7 @@ export const getMovieById = async (req: Request, res: Response) => {
 
 export const updateMovie = async (req: Request, res: Response) => {
   try {
+    const user = req.user;
     const movieId = parseInt(req.params.id as string);
     if (!movieId || isNaN(movieId)) {
       res.status(400).json({ message: "Invalid or missing movie ID" });
@@ -177,6 +199,7 @@ export const updateMovie = async (req: Request, res: Response) => {
       req.body,
       posterUrl,
       photoUrls,
+      user,
     );
     res.status(201).json({
       status,
@@ -189,11 +212,12 @@ export const updateMovie = async (req: Request, res: Response) => {
 
 export const deleteMovie = async (req: Request, res: Response) => {
   try {
+    const user = req.user;
     const movieId = parseInt(req.params.id as string);
     if (!movieId || isNaN(movieId)) {
       res.status(400).json({ message: "Invalid or missing movie ID" });
     }
-    const { status, message } = await movieService.deleteMovie(movieId);
+    const { status, message } = await movieService.deleteMovie(movieId, user);
     res.status(status).json({ message });
   } catch (err) {
     res.status(500).json({ message: err.message });

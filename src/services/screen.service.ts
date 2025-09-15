@@ -7,9 +7,14 @@ import { GenreType } from "../types/GenreType";
 import { ScreenType } from "../types/ScreenType";
 import { SeatType } from "../entity/SeatType";
 import { ScreenSeatType } from "../entity/ScreenSeatType";
+import { addNotification } from "../utils/addNoti";
+import { NOTI_TYPE } from "../constants";
+import { User } from "../entity/User";
+import { Schedule } from "../entity/Schedule";
 
 export class ScreenService {
   private screenRepo = AppDataSource.getRepository(Screen);
+  private scheduleRepo = AppDataSource.getRepository(Schedule);
   private theatreRepo = AppDataSource.getRepository(Theatre);
   private seatTypeRepo = AppDataSource.getRepository(SeatType);
   private screenSeatTypeRepo = AppDataSource.getRepository(ScreenSeatType);
@@ -111,7 +116,7 @@ export class ScreenService {
     };
   }
 
-  async addScreen(body: Omit<ScreenType, "id">) {
+  async addScreen(body: Omit<ScreenType, "id">, user: User) {
     const existingGenre = await this.screenRepo.findOneBy({ name: body.name });
     if (existingGenre) {
       throw new Error("Screen already exists.");
@@ -136,7 +141,7 @@ export class ScreenService {
       updatedAt: null,
     });
 
-    await this.screenRepo.save(newScreen);
+    const screen = await this.screenRepo.save(newScreen);
 
     // Save seat types for this screen
     for (const st of body.seatTypes) {
@@ -158,6 +163,17 @@ export class ScreenService {
       ...theatreEntity,
       totalScreens: theatreEntity.totalScreens + 1,
     });
+
+    const message = `${user.name} added ${screen.name} screen to '${theatreEntity.name}' theatre.`;
+
+    addNotification(
+      NOTI_TYPE.SCREEN_ADDED,
+      "Screen Added",
+      message,
+      user.id,
+      theatreEntity?.id,
+    );
+
     return {
       status: 200,
       message: "Screen added successfully",
@@ -165,7 +181,11 @@ export class ScreenService {
     };
   }
 
-  async updateScreen(screenId: number, body: Omit<ScreenType, "id">) {
+  async updateScreen(
+    screenId: number,
+    body: Omit<ScreenType, "id">,
+    user: User,
+  ) {
     const { name } = body;
 
     const existingScreenById = await this.screenRepo.findOne({
@@ -207,12 +227,16 @@ export class ScreenService {
     };
     const saved = await this.screenRepo.save(updatedScreen);
 
+    if (existingScreenById?.capacity !== body.capacity) {
+      await this.scheduleRepo.update(
+        { screen: { id: existingScreenById.id } },
+        { availableSeats: body.capacity - body.disabledSeats.length },
+      );
+    }
+
     // Update totalScreens
     const oldTheatreId = existingScreenById.theatre?.id;
     const newTheatreId = theatreEntity.id;
-
-    console.log("old", oldTheatreId);
-    console.log("new", newTheatreId);
 
     // 1️⃣ Old theatre (if changed)
     if (oldTheatreId && oldTheatreId !== newTheatreId) {
@@ -291,6 +315,16 @@ export class ScreenService {
       await this.screenSeatTypeRepo.remove(remaining); // has id
     }
 
+    const message = `${user.name} updated ${existingScreenById.name} screen in '${theatreEntity.name}' theatre.`;
+
+    addNotification(
+      NOTI_TYPE.SCREEN_UPDATED,
+      "Screen Updated",
+      message,
+      user.id,
+      theatreEntity?.id,
+    );
+
     return {
       status: 200,
       message: "Screen updated successfully.",
@@ -298,7 +332,7 @@ export class ScreenService {
     };
   }
 
-  async deleteScreen(screenId: number) {
+  async deleteScreen(screenId: number, user: User) {
     const screen = await this.screenRepo.findOne({
       where: { id: screenId },
       relations: ["theatre"],
@@ -319,6 +353,16 @@ export class ScreenService {
     });
 
     await this.screenRepo.save({ ...screen, active: !screen.active });
+
+    const message = `${user.name} deactivated ${screen.name} screen in '${theatre.name}' theatre.`;
+
+    addNotification(
+      screen.active ? NOTI_TYPE.SCREEN_DEACTIVATED : NOTI_TYPE.SCREEN_ACTIVATED,
+      `Screen ${screen.active ? "Deactivated" : "Activated"}`,
+      message,
+      user.id,
+      theatre?.id,
+    );
 
     return {
       status: 200,
