@@ -10,10 +10,10 @@ import {
 
 const router = express.Router();
 
-const uploadDir = "uploads";
-if (!fs.existsSync(uploadDir)) {
-  fs.mkdirSync(uploadDir);
-}
+// const uploadDir = "uploads";
+// if (!fs.existsSync(uploadDir)) {
+//   fs.mkdirSync(uploadDir);
+// }
 
 router.put(
   "/profile/update/:id",

@@ -15,10 +15,10 @@ import { imgUpload } from "../middlewares/imgUpload";
 
 const router = express.Router();
 
-const uploadDir = "uploads";
-if (!fs.existsSync(uploadDir)) {
-  fs.mkdirSync(uploadDir);
-}
+// const uploadDir = "uploads";
+// if (!fs.existsSync(uploadDir)) {
+//   fs.mkdirSync(uploadDir);
+// }
 
 // Configure multer (can be moved to a separate file)
 // const storage = multer.diskStorage({
