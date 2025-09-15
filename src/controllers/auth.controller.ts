@@ -1,16 +1,20 @@
 import { AuthService } from "../services/auth.service";
 import { Request, Response } from "express";
 import { Role } from "../types/AuthType";
+import { AppDataSource } from "../data-source";
+import { User } from "../entity/User";
 
 const authService = new AuthService();
+const userRepo = AppDataSource.getRepository(User);
 
 export const register = async (req: Request, res: Response) => {
   try {
-    const { name, email, password, role } = req.body;
+    const { name, email, password, phoneNo, role } = req.body;
     const { status, message } = await authService.register(
       name,
       email,
       password,
+      phoneNo,
       role,
     );
     res.status(200).json({ status, message });
@@ -26,6 +30,8 @@ export const login = async (req: Request, res: Response) => {
     res.cookie("refreshToken", refreshToken, {
       httpOnly: true,
       secure: true,
+      sameSite: "strict",
+      path: "/",
       maxAge: 3 * 24 * 60 * 60 * 1000,
     }); // 3 days
     res.status(200).json({ status, message, role, accessToken, expiresIn });
@@ -40,6 +46,8 @@ export const logout = async (req: Request, res: Response) => {
     res.clearCookie("refreshToken", {
       httpOnly: true,
       secure: true,
+      sameSite: "strict",
+      path: "/",
     });
     res.status(200).json({ message: "You have logged out successfully" });
   } catch (err) {
@@ -51,11 +59,25 @@ export const refreshAccessToken = async (req: Request, res: Response) => {
   try {
     const refresh = req.cookies.refreshToken;
     if (!refresh) {
-      res.status(401).json({ message: "No refresh token provided" });
+      res.status(408).json({ message: "No refresh token provided" });
     }
-    const { accessToken, expiresIn } = await authService.refreshAccessToken(
-      refresh,
-    );
+    const { accessToken, expiresIn, newRefreshToken } =
+      await authService.refreshAccessToken(refresh);
+
+    res.clearCookie("refreshToken", {
+      httpOnly: true,
+      secure: true,
+      sameSite: "strict",
+      path: "/",
+    });
+
+    res.cookie("refreshToken", newRefreshToken, {
+      httpOnly: true,
+      secure: true,
+      sameSite: "strict",
+      path: "/",
+      maxAge: 3 * 24 * 60 * 60 * 1000,
+    }); // 3 days
     res.status(200).json({ accessToken, expiresIn });
   } catch (err) {
     res.status(401).json({ message: err.message });
@@ -68,14 +90,12 @@ export const getUserProfile = async (req: Request, res: Response) => {
     if (!user) {
       res.status(200).json({ role: Role.guest });
     }
-    res.status(200).json({
-      id: user.id,
-      name: user.name,
-      email: user.email,
-      role: user.role,
-      createdAt: user.createdAt,
-      updatedAt: user.updatedAt,
+    const currentUser = await userRepo.findOne({
+      relations: ["image", "theatre"],
+      where: { id: user.id },
     });
+
+    res.status(200).json(currentUser);
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
@@ -94,8 +114,10 @@ export const getAdminProfile = async (req: Request, res: Response) => {
         name: user.name,
         email: user.email,
         role: user.role,
+        image: user.image,
         createdAt: user.createdAt,
         updatedAt: user.updatedAt,
+        theatre: user.theatre,
       });
   } catch (err) {
     res.status(500).json({ message: err.message });

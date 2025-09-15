@@ -12,7 +12,7 @@ import {
   resetPassword,
   verifyOtp,
 } from "../controllers/auth.controller";
-import { protect } from "../middlewares/auth.middleware";
+import { accessAsAdmin, protect } from "../middlewares/auth.middleware";
 
 const router = express.Router();
 
@@ -20,7 +20,7 @@ router.post("/register", validateDto(CreateUserDto), register);
 router.post("/login", login);
 router.post("/logout", logout);
 router.get("/user/me", protect, getUserProfile);
-router.get("/admin/me", protect, getAdminProfile);
+router.get("/admin/me", accessAsAdmin, getAdminProfile);
 router.get("/refresh", refreshAccessToken);
 router.post("/forgot-password", forgotPasssword);
 router.post("/verifyOtp", verifyOtp);
