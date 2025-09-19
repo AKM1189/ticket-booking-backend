@@ -7,18 +7,15 @@ const notiService = new NotificationService();
 export const getNotifications = async (req: Request, res: Response) => {
   try {
     const userId = req.user.id;
-    const { page, limit, sortBy, sortOrder, search } = getQueryParams(
-      req,
-      1,
-      10,
-      "id",
-    );
+    const type = req.params.type as string;
+    const { page, limit } = getQueryParams(req, 1, 10, "id");
     const { status, data, pagination } = await notiService.getNotifications(
       page,
       limit,
-      sortBy,
-      sortOrder,
+      "createdAt",
+      "DESC",
       userId,
+      type,
     );
 
     res.status(status).json({
@@ -46,7 +43,6 @@ export const readNoti = async (req: Request, res: Response) => {
 
 export const readAllNoti = async (req: Request, res: Response) => {
   try {
-    const notiId = req.params.id as string;
     const userId = req.user.id;
     const { status, message } = await notiService.readAllNoti(userId);
     res.status(status).json({

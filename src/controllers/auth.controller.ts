@@ -91,7 +91,7 @@ export const getUserProfile = async (req: Request, res: Response) => {
       res.status(200).json({ role: Role.guest });
     }
     const currentUser = await userRepo.findOne({
-      relations: ["image"],
+      relations: ["image", "theatre"],
       where: { id: user.id },
     });
 
@@ -117,6 +117,7 @@ export const getAdminProfile = async (req: Request, res: Response) => {
         image: user.image,
         createdAt: user.createdAt,
         updatedAt: user.updatedAt,
+        theatre: user.theatre,
       });
   } catch (err) {
     res.status(500).json({ message: err.message });

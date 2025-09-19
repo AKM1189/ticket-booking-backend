@@ -5,7 +5,7 @@ import { Movie } from "../entity/Movie";
 import { Schedule } from "../entity/Schedule";
 import { Theatre } from "../entity/Theatre";
 import { MovieStatus } from "../types/MovieType";
-import { In } from "typeorm";
+import { Between, In } from "typeorm";
 import { User } from "../entity/User";
 import { Role } from "../types/AuthType";
 
@@ -34,11 +34,18 @@ export class ReportService {
       (sum, b) => sum + Number(b.totalAmount),
       0,
     );
+    const today = new Date();
+
+    const startOfDay = new Date(today);
+    startOfDay.setHours(0, 0, 0, 0);
+
+    const endOfDay = new Date(today);
+    endOfDay.setHours(23, 59, 59, 999);
 
     const whereClause =
       user?.role === Role.staff
-        ? { user: { id: user?.id }, bookingDate: dayjs().format("YYYY-MM-DD") }
-        : { bookingDate: dayjs().format("YYYY-MM-DD") };
+        ? { user: { id: user?.id }, bookingDate: Between(startOfDay, endOfDay) }
+        : { bookingDate: Between(startOfDay, endOfDay) };
 
     const [, todayTicketSales] = await this.bookingRepo.findAndCount({
       where: whereClause,

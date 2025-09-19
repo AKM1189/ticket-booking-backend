@@ -87,7 +87,10 @@ export const accessAsAdmin = async (
         throw new Error("You don't have access to this route.");
       }
       const adminUser = await userRepo.findOneBy({ email, role: Role.admin });
-      const staffUser = await userRepo.findOneBy({ email, role: Role.staff });
+      const staffUser = await userRepo.findOne({
+        relations: ["theatre"],
+        where: { email, role: Role.staff },
+      });
       if (!adminUser && !staffUser) {
         res.status(401).json({
           message: "User not found",

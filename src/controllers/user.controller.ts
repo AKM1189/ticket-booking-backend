@@ -49,7 +49,11 @@ export const getUsers = async (req: Request, res: Response) => {
 
 export const addAdmin = async (req: Request, res: Response) => {
   try {
-    const { status, message, data } = await userService.addAdmin(req.body);
+    const user = req.user;
+    const { status, message, data } = await userService.addAdmin(
+      req.body,
+      user,
+    );
     res.status(status).json({
       status,
       message,
@@ -63,9 +67,11 @@ export const addAdmin = async (req: Request, res: Response) => {
 export const updateUser = async (req: Request, res: Response) => {
   try {
     const userId = parseInt(req.params.id as string);
+    const user = req.user;
     const { status, message, data } = await userService.updateUser(
       userId,
       req.body,
+      user,
     );
     res.status(status).json({
       status,
@@ -80,7 +86,8 @@ export const updateUser = async (req: Request, res: Response) => {
 export const deactivateUser = async (req: Request, res: Response) => {
   try {
     const userId = parseInt(req.params.id as string);
-    const { status, message } = await userService.deactivateUser(userId);
+    const user = req.user;
+    const { status, message } = await userService.deactivateUser(userId, user);
     res.status(status).json({
       status,
       message,

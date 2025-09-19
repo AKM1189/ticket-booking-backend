@@ -16,6 +16,10 @@ import { ScheduleSeatType } from "../entity/ScheduleSeatType";
 import { updateMovieStatus } from "../utils/updateMovieStatus";
 import { updateMovie } from "../utils/updateStatus";
 import { Like } from "typeorm";
+import { addNotification } from "../utils/addNoti";
+import { NOTI_TYPE } from "../constants";
+import { User } from "../entity/User";
+import { Role } from "../types/AuthType";
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
@@ -37,28 +41,53 @@ export class ScheduleService {
     sortOrder: string,
     search: string,
     date: string,
+    user: User,
   ) {
     let whereClause: any = {};
 
-    if (search && date) {
-      whereClause = [
-        { showDate: date, movie: { title: Like(`%${search}%`) } },
-        { showDate: date, theatre: { name: Like(`%${search}%`) } },
-        { showDate: date, screen: { name: Like(`%${search}%`) } },
-        { showDate: date, showTime: Like(`%${search}%`) },
-        { showDate: date, status: Like(`%${search}%`) },
-      ];
-    } else if (search) {
-      whereClause = [
-        { movie: { title: Like(`%${search}%`) } },
-        { theatre: { name: Like(`%${search}%`) } },
-        { screen: { name: Like(`%${search}%`) } },
-        { showTime: Like(`%${search}%`) },
-        { status: Like(`%${search}%`) },
-      ];
-    } else {
-      whereClause = { showDate: date };
+    if (user.role === Role.staff) {
+      const theatre = { id: user.theatre?.id };
+      if (search && date) {
+        whereClause = [
+          { showDate: date, movie: { title: Like(`%${search}%`) } },
+          { theatre, showDate: date, screen: { name: Like(`%${search}%`) } },
+          { theatre, showDate: date, showTime: Like(`%${search}%`) },
+          { theatre, showDate: date, status: Like(`%${search}%`) },
+        ];
+      } else if (search) {
+        whereClause = [
+          { theatre, movie: { title: Like(`%${search}%`) } },
+          { theatre, screen: { name: Like(`%${search}%`) } },
+          { theatre, showTime: Like(`%${search}%`) },
+          { theatre, status: Like(`%${search}%`) },
+        ];
+      } else {
+        whereClause = { theatre, showDate: date };
+      }
     }
+
+    if (user.role === Role.admin) {
+      if (search && date) {
+        whereClause = [
+          { showDate: date, movie: { title: Like(`%${search}%`) } },
+          { showDate: date, theatre: { name: Like(`%${search}%`) } },
+          { showDate: date, screen: { name: Like(`%${search}%`) } },
+          { showDate: date, showTime: Like(`%${search}%`) },
+          { showDate: date, status: Like(`%${search}%`) },
+        ];
+      } else if (search) {
+        whereClause = [
+          { movie: { title: Like(`%${search}%`) } },
+          { theatre: { name: Like(`%${search}%`) } },
+          { screen: { name: Like(`%${search}%`) } },
+          { showTime: Like(`%${search}%`) },
+          { status: Like(`%${search}%`) },
+        ];
+      } else {
+        whereClause = { showDate: date };
+      }
+    }
+
     const [schedules, total] = await this.scheduleRepo.findAndCount({
       relations: [
         "movie",
@@ -203,8 +232,6 @@ export class ScheduleService {
       })
       .getRawMany();
 
-    console.log("show time", showTimes);
-
     const formattedShowDates = showTimes.map((time) =>
       time.showTime.slice(0, 5),
     );
@@ -214,7 +241,7 @@ export class ScheduleService {
     };
   }
 
-  async addSchedule(body: ScheduleBodyType) {
+  async addSchedule(body: ScheduleBodyType, user: User) {
     const {
       showDate,
       showTime,
@@ -236,7 +263,7 @@ export class ScheduleService {
       relations: ["schedules"],
       where: { id: movieId },
     });
-    const theatre = theatreId
+    const theatre: any = theatreId
       ? await this.theatreRepo.findOne({ where: { id: theatreId } })
       : {};
     const screen = await this.screenRepo.findOne({
@@ -290,6 +317,20 @@ export class ScheduleService {
     const updatedMovie = updateMovie(movie);
     await this.movieRepo.save(updatedMovie);
 
+    const message = `${
+      user.name
+    } created New Schedule for '${movie?.title.toUpperCase()}' at ${
+      screen.name
+    } on ${show?.showDate}, ${show?.showTime.slice(0, 5)}).`;
+
+    addNotification(
+      NOTI_TYPE.SCHEDULE_ADDED,
+      "Schedule Added",
+      message,
+      user.id,
+      theatre?.id,
+    );
+
     return {
       status: 200,
       message: "Schedule added successfully",
@@ -297,7 +338,7 @@ export class ScheduleService {
     };
   }
 
-  async updateSchedule(scheduleId: number, body: ScheduleBodyType) {
+  async updateSchedule(scheduleId: number, body: ScheduleBodyType, user: User) {
     const {
       showDate,
       showTime,
@@ -332,7 +373,7 @@ export class ScheduleService {
       where: { id: movieId },
     });
 
-    const theatre = theatreId
+    const theatre: any = theatreId
       ? await this.theatreRepo.findOne({ where: { id: theatreId } })
       : {};
     const screen = await this.screenRepo.findOne({ where: { id: screenId } });
@@ -383,6 +424,20 @@ export class ScheduleService {
       await this.movieRepo.save(updatedMovie);
     }
 
+    const message = `${
+      user.name
+    } updated Schedule for '${movie?.title.toUpperCase()}' at ${
+      screen.name
+    } on ${schedule?.showDate}, ${schedule?.showTime.slice(0, 5)}).`;
+
+    addNotification(
+      NOTI_TYPE.SCHEDULE_UPDATED,
+      "Schedule Updated",
+      message,
+      user.id,
+      theatre?.id,
+    );
+
     return {
       status: 200,
       message: "Schedule updated successfully",
@@ -390,9 +445,9 @@ export class ScheduleService {
     };
   }
 
-  async deleteSchedule(scheduleId: number) {
+  async deleteSchedule(scheduleId: number, user: User) {
     const schedule = await this.scheduleRepo.findOne({
-      relations: ["movie"],
+      relations: ["movie", "screen", "theatre"],
       where: { id: scheduleId },
     });
 
@@ -417,6 +472,20 @@ export class ScheduleService {
       const updatedMovie = schedule.movie ? updateMovie(schedule.movie) : null;
       await this.movieRepo.save(updatedMovie);
     }
+    const message = `${
+      user.name
+    } cancelled Schedule for '${schedule?.movie?.title.toUpperCase()}' at ${
+      schedule?.screen.name
+    } on ${schedule?.showDate}, ${schedule?.showTime.slice(0, 5)}).`;
+
+    addNotification(
+      NOTI_TYPE.SCHEDULE_DELETED,
+      "Schedule Cancelled",
+      message,
+      user.id,
+      schedule?.theatre?.id,
+    );
+
     return {
       status: 200,
       message: "Schedule deleted successfully",

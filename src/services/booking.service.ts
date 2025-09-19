@@ -10,7 +10,7 @@ import { User } from "../entity/User";
 import { BookingType } from "../types/BookingType";
 import { ScheduleStatus } from "../types/ScheduleType";
 import { generateTicket } from "../utils/generateTicket";
-import { Like } from "typeorm";
+import { Between, Like } from "typeorm";
 import { addNotification } from "../utils/addNoti";
 import { NOTI_TYPE } from "../constants";
 
@@ -41,7 +41,13 @@ export class BookingService {
     }
 
     if (date) {
-      whereClause = { ...whereClause, bookingDate: date };
+      // Create Date objects at 00:00:00 and 23:59:59 of that day
+      const startOfDay = new Date(`${date}T00:00:00.000Z`);
+      const endOfDay = new Date(`${date}T23:59:59.999Z`);
+      whereClause = {
+        ...whereClause,
+        bookingDate: Between(startOfDay, endOfDay),
+      };
     }
 
     if (bookingStatus) {
@@ -145,11 +151,13 @@ export class BookingService {
         : { ...whereClause, status: "cancelled" },
     });
     const cancelled = cancelledBookings.length;
-
+    const today = new Date();
+    const startOfDay = new Date(today.setHours(0, 0, 0, 0));
+    const endOfDay = new Date(today.setHours(23, 59, 59, 999));
     const todayBookings = await this.bookingRepo.find({
       select: ["totalAmount"],
       where: {
-        bookingDate: dayjs().format("YYYY-MM-DD"),
+        bookingDate: Between(startOfDay, endOfDay),
         ...(staffID ? { user: { id: parseInt(staffID) } } : {}),
       },
     });
@@ -316,7 +324,7 @@ export class BookingService {
       customerPhone,
       note,
       status: "confirmed",
-      bookingDate: dayjs().format("YYYY-MM-DD"),
+      bookingDate: new Date(),
     });
 
     const updatedSchedule = {
@@ -333,14 +341,17 @@ export class BookingService {
     // admin - all noti (role)
     // staff - theatre only noti ( role, theatreId)
 
-    const message = `${user?.name} booked ${selectedSeats?.length} seats for ${
-      schedule?.movie?.title
-    } at ${schedule?.showDate} (${schedule?.showTime.slice(0, 5)}).`;
+    const message = `${user?.name} booked ${
+      selectedSeats?.length
+    } seats for '${schedule?.movie?.title.toUpperCase()}' at ${
+      schedule?.showDate
+    }, ${schedule?.showTime.slice(0, 5)}.`;
 
     addNotification(
       NOTI_TYPE.NEW_BOOKING,
       "New Booking",
       message,
+      user?.id,
       schedule?.theatre?.id,
     );
 
@@ -351,12 +362,13 @@ export class BookingService {
     };
   }
 
-  async cancelBooking(bookingId: string) {
+  async cancelBooking(bookingId: string, user: User) {
     const intBookingId = parseInt(bookingId);
 
     const booking = await this.bookingRepo.findOneBy({ id: intBookingId });
 
     const schedule = await this.scheduleRepo.findOne({
+      relations: ["theatre"],
       where: { bookings: { id: intBookingId } },
     });
 
@@ -380,8 +392,15 @@ export class BookingService {
     await this.bookingRepo.save(updatedBooking);
     await this.scheduleRepo.save(updatedSchedule);
 
-    console.log("updatedBooking", updatedBooking);
-    console.log("updatedSchedule", updatedSchedule);
+    const message = `${user?.name} cancelled BookingID(${bookingId}).`;
+
+    addNotification(
+      NOTI_TYPE.CANCEL_BOOKING,
+      "Booking Cancelled",
+      message,
+      user.id,
+      schedule?.theatre?.id,
+    );
 
     return {
       status: 200,

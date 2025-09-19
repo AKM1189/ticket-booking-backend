@@ -8,8 +8,8 @@ import {
 
 const router = express.Router();
 
-router.get("/notifications", protect, getNotifications);
-router.put("/notifications/:id", protect, readNoti);
-router.put("/notifications/all", protect, readAllNoti);
+router.get("/notifications/:type", protect, getNotifications);
+router.patch("/notifications/all", protect, readAllNoti);
+router.patch("/notifications/:id", protect, readNoti);
 
 export default router;

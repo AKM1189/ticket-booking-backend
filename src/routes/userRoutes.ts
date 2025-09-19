@@ -20,6 +20,6 @@ router.put(
   validateDto(CreateAdminDto),
   updateUser,
 );
-router.delete("/users/:id", deactivateUser);
+router.delete("/users/:id", accessAsAdmin, deactivateUser);
 
 export default router;
