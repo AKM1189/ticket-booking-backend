@@ -7,7 +7,7 @@ import { sendEmail } from "../utils/sendEmail";
 import { LoginType, Role } from "../types/AuthType";
 
 dotenv.config();
-
+console.log("JWT_SECRET:", process.env.JWT_SECRET);
 export class AuthService {
   private userRepo = AppDataSource.getRepository(User);
 
@@ -71,7 +71,7 @@ export class AuthService {
 
     const accessToken = jwt.sign(
       { email, role: user.role },
-      process.env.ACCESS_SECRET,
+      process.env.JWT_SECRET,
       {
         expiresIn: "15m",
       },
@@ -87,7 +87,7 @@ export class AuthService {
 
     const decode = jwt.verify(
       accessToken,
-      process.env.ACCESS_SECRET,
+      process.env.JWT_SECRET,
     ) as jwt.JwtPayload;
     const expiresIn = decode?.exp
       ? new Date(decode.exp * 1000).toISOString()
@@ -120,7 +120,7 @@ export class AuthService {
 
       const accessToken = jwt.sign(
         { email, role: user.role },
-        process.env.ACCESS_SECRET,
+        process.env.JWT_SECRET,
         {
           expiresIn: "15m",
         },
@@ -135,7 +135,7 @@ export class AuthService {
       );
       const decodeAccess = jwt.verify(
         accessToken,
-        process.env.ACCESS_SECRET,
+        process.env.JWT_SECRET,
       ) as jwt.JwtPayload;
       const expiresIn = decodeAccess?.exp
         ? new Date(decodeAccess.exp * 1000).toISOString()
@@ -165,10 +165,10 @@ export class AuthService {
     }
 
     const resetCode = Math.floor(100000 + Math.random() * 900000).toString();
-
     const resetToken = jwt.sign({ email, resetCode }, process.env.JWT_SECRET, {
       expiresIn: "5m",
     });
+    console.log("reset Code", resetToken);
 
     const content = `
     <div style="font-family: Arial, sans-serif; background-color: #f9f9f9; padding: 20px;">
