@@ -18,13 +18,13 @@ export const protect = async (req: Request, res: Response, next: Next) => {
     try {
       const token = req.headers.authorization.split(" ")[1];
 
-      if (!process.env.ACCESS_SECRET) {
-        throw "ACCESS_SECRET) { is not defined in the environment variables";
+      if (!process.env.JWT_SECRET) {
+        throw "JWT_SECRET) { is not defined in the environment variables";
       }
 
       const decode = jwt.verify(
         token,
-        process.env.ACCESS_SECRET,
+        process.env.JWT_SECRET,
       ) as jwt.JwtPayload;
       const email = decode?.email;
       if (!email) {
@@ -70,13 +70,13 @@ export const accessAsAdmin = async (
     try {
       const token = req.headers.authorization.split(" ")[1];
 
-      if (!process.env.ACCESS_SECRET) {
-        throw "ACCESS_SECRET) { is not defined in the environment variables";
+      if (!process.env.JWT_SECRET) {
+        throw "JWT_SECRET) { is not defined in the environment variables";
       }
 
       const decode = jwt.verify(
         token,
-        process.env.ACCESS_SECRET,
+        process.env.JWT_SECRET,
       ) as jwt.JwtPayload;
       const email = decode?.email;
       const role = decode?.role;

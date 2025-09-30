@@ -287,7 +287,7 @@ export class MovieService {
     }
     if (removedGenres?.length > 0) {
       for (const genre of removedGenres) {
-        genre.movieCount = (genre.movieCount || 0) - 1;
+        genre.movieCount = Math.max((genre.movieCount || 0) - 1, 0);
       }
     }
     await this.genreRepo.save([...newGenres, ...removedGenres]);
