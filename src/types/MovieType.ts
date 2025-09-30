@@ -22,4 +22,5 @@ export enum MovieStatus {
   ticketAvailable = "Ticket Available",
   nowShowing = "Now Showing",
   ended = "Ended",
+  trending = "Trending",
 }

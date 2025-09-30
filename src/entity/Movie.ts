@@ -46,6 +46,9 @@ export class Movie {
   @Column("simple-array")
   experience: string[];
 
+  @Column("decimal", { precision: 5, scale: 2, default: 1.0 })
+  rating: number;
+
   @Column({ nullable: true })
   createdAt: Date;
 

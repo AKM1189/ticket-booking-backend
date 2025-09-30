@@ -1,10 +1,10 @@
 import { STAFF_NOTI_TYPE } from "../constants";
-import { getNotifications } from "../controllers/notification.controller";
+import { getNotifications } from "../controllers/admin.controllers/notification.controller";
 import { AppDataSource } from "../data-source";
 import { Notification } from "../entity/Notification";
 import { User } from "../entity/User";
 import { UserNotification } from "../entity/UserNotification";
-import { NotificationService } from "../services/notification.service";
+import { NotificationService } from "../services/admin.service/notification.service";
 import { getIO } from "../socket";
 import { Role } from "../types/AuthType";
 

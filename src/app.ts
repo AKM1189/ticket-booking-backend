@@ -10,18 +10,20 @@ import { Server } from "socket.io";
 
 // Import your routes
 import authRoutes from "./routes/authRoutes";
-import movieRoutes from "./routes/movieRoutes";
-import genreRoutes from "./routes/genreRoutes";
-import castRoutes from "./routes/castRoutes";
-import theatreRoutes from "./routes/theatreRoutes";
-import screenRoutes from "./routes/screenRoutes";
-import seatTypeRoute from "./routes/seatTypeRoute";
-import scheduleRoutes from "./routes/scheduleRoutes";
-import bookingRoutes from "./routes/bookingRoutes";
-import userRoutes from "./routes/userRoutes";
-import dashboardRoutes from "./routes/reportRoutes";
-import profileRoutes from "./routes/profileRoutes";
-import notiRoutes from "./routes/notiRoutes";
+import movieRoutes from "./routes/admin/movieRoutes";
+import genreRoutes from "./routes/admin/genreRoutes";
+import castRoutes from "./routes/admin/castRoutes";
+import theatreRoutes from "./routes/admin/theatreRoutes";
+import screenRoutes from "./routes/admin/screenRoutes";
+import seatTypeRoute from "./routes/admin/seatTypeRoute";
+import scheduleRoutes from "./routes/admin/scheduleRoutes";
+import bookingRoutes from "./routes/admin/bookingRoutes";
+import userRoutes from "./routes/admin/userRoutes";
+import dashboardRoutes from "./routes/admin/reportRoutes";
+import profileRoutes from "./routes/admin/profileRoutes";
+import notiRoutes from "./routes/admin/notiRoutes";
+import userMovieRoutes from "./routes/user/movieRoutes";
+import userTheatreRoutes from "./routes/user/theatreRoutes";
 
 import { updateMovieStatus } from "./utils/updateMovieStatus";
 import { getBookedSeats } from "./utils/getBookedSeats";
@@ -67,6 +69,7 @@ export const createApp = async () => {
   // API routes
   const authUrl = "/api/auth/";
   const adminUrl = "/api/admin/";
+  const userUrl = "/api/user/";
 
   app.use(authUrl, authRoutes);
   app.use(adminUrl, movieRoutes);
@@ -81,6 +84,9 @@ export const createApp = async () => {
   app.use(adminUrl, profileRoutes);
   app.use(adminUrl, userRoutes);
   app.use(adminUrl, notiRoutes);
+
+  app.use(userUrl, userMovieRoutes);
+  app.use(userUrl, userTheatreRoutes);
 
   return app;
 };

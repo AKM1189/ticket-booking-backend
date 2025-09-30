@@ -29,18 +29,34 @@ export const updateMovie = (movie: Movie): Movie => {
 };
 
 export const updateSchedule = (schedule: Schedule): Schedule => {
-  const today = dayjs().format("YYYY-MM-DD");
+  const now = dayjs();
 
-  const showDate = dayjs(schedule.showDate).format("YYYY-MM-DD");
+  // Build proper datetime from showDate + showTime
+  const showDateTime = dayjs(
+    `${schedule.showDate} ${schedule.showTime}`,
+    "YYYY-MM-DD HH:mm",
+  );
+  const endDateTime = showDateTime.add(
+    parseInt(schedule?.movie?.duration),
+    "minute",
+  );
 
-  if (schedule.status === ScheduleStatus.inActive)
+  if (schedule.status === ScheduleStatus.inActive) {
+    // Leave it inactive if already set
     schedule.status = ScheduleStatus.inActive;
-  else if (showDate === today) {
-    schedule.status = ScheduleStatus.ongoing;
-  } else if (dayjs(showDate).isBefore(today, "day")) {
+  } else if (now.isAfter(endDateTime)) {
+    // Show ended
     schedule.status = ScheduleStatus.completed;
-  } else if (dayjs(showDate).isAfter(today, "day")) {
+  } else if (
+    now.isAfter(showDateTime.subtract(15, "minute")) &&
+    now.isBefore(endDateTime)
+  ) {
+    // Within 15 minutes before start, or during the show
+    schedule.status = ScheduleStatus.ongoing;
+  } else if (now.isBefore(showDateTime.subtract(15, "minute"))) {
+    // Future but bookable
     schedule.status = ScheduleStatus.active;
   }
+
   return schedule;
 };

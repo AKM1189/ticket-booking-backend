@@ -11,7 +11,7 @@ import {
   register,
   resetPassword,
   verifyOtp,
-} from "../controllers/auth.controller";
+} from "../controllers/admin.controllers/auth.controller";
 import { accessAsAdmin, protect } from "../middlewares/auth.middleware";
 
 const router = express.Router();
