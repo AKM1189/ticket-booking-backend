@@ -242,7 +242,7 @@ export class MovieService {
       .createQueryBuilder("theatre")
       .innerJoin("theatre.schedules", "schedules")
       .innerJoin("schedules.movie", "movie")
-      .andWhere(
+      .where(
         `(schedules.showDate >= :today AND schedules.showDate <= :maxDay)`,
         { today, maxDay },
       )
@@ -250,10 +250,6 @@ export class MovieService {
         status: ScheduleStatus.active,
       })
       .andWhere("theatre.active = 1")
-      .andWhere(
-        `(schedules.showDate >= :today AND schedules.showDate <= :maxDay)`,
-        { today, maxDay },
-      )
       .andWhere(
         "(schedules.showDate != :today OR schedules.showTime >= :nowTime)",
         { today, nowTime },
@@ -282,8 +278,8 @@ export class MovieService {
       .select("schedule.showDate", "showDate")
       .leftJoin("schedule.theatre", "theatre")
       .leftJoin("schedule.movie", "movie")
-      .where("movie.status NOT IN (:...status)", {
-        status: [MovieStatus.ended, MovieStatus.comingSoon],
+      .where("movie.status = :status", {
+        status: MovieStatus.nowShowing,
       })
       .andWhere(
         `(schedule.showDate >= :today AND schedule.showDate <= :maxDay)`,

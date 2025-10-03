@@ -6,7 +6,7 @@ import { Schedule } from "../entity/Schedule";
 import dayjs from "dayjs";
 
 export const updateMovieStatus = () => {
-  cron.schedule("*/10 * * * *", async () => {
+  cron.schedule("*/5 * * * *", async () => {
     console.log("Running movie status update job...");
 
     const movieRepo = AppDataSource.getRepository(Movie);
