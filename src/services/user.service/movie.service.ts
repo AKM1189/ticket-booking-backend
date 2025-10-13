@@ -26,6 +26,8 @@ export class MovieService {
     movieId?: number,
   ) {
     const today = dayjs().format("YYYY-MM-DD");
+    const nowTime = dayjs().format("hh:mm");
+
     let qb = this.movieRepo
       .createQueryBuilder("movie")
       .leftJoinAndSelect("movie.poster", "poster")
@@ -49,7 +51,10 @@ export class MovieService {
     }
 
     if (type === MovieStatus.nowShowing) {
-      qb.andWhere("schedules.showDate = :today", { today });
+      qb.andWhere("schedules.showDate = :today", { today }).andWhere(
+        `(schedules.showTime >= :nowTime)`,
+        { nowTime },
+      );
     }
 
     if (type === MovieStatus.ticketAvailable) {
@@ -100,8 +105,7 @@ export class MovieService {
     }
 
     qb.orderBy("movie.releaseDate", "DESC");
-    console.log("page", page);
-    console.log("limit", limit);
+
     qb.skip((page - 1) * limit) // offset
       .take(limit);
 
@@ -120,7 +124,6 @@ export class MovieService {
 
   async getMovieDetail(movieId: number) {
     const today = dayjs().format("YYYY-MM-DD");
-    console.log("movieID", movieId);
     let qb = this.movieRepo
       .createQueryBuilder("movie")
       .leftJoinAndSelect("movie.genres", "genres")
@@ -129,10 +132,11 @@ export class MovieService {
       .leftJoinAndSelect("movie.poster", "poster")
       .leftJoinAndSelect("movie.photos", "photos")
       .leftJoinAndSelect("movie.reviews", "reviews")
+      .leftJoinAndSelect("reviews.user", "user")
+      .leftJoinAndSelect("user.image", "profile")
       .leftJoinAndSelect("movie.schedules", "schedules")
       .leftJoinAndSelect("schedules.theatre", "theatre")
-      .where("movie.id = :movieId", { movieId })
-      .andWhere("schedules.showDate >= :today", { today });
+      .where("movie.id = :movieId", { movieId });
 
     qb.orderBy(`movie.releaseDate`, "DESC");
 
@@ -267,6 +271,10 @@ export class MovieService {
         `(schedules.showDate >= :today AND schedules.showDate <= :maxDay)`,
         { today, maxDay },
       )
+      .andWhere(
+        "(schedules.showDate != :today OR schedules.showTime >= :nowTime)",
+        { today, nowTime },
+      )
       .distinct(true);
 
     movieQuery.orderBy("movie.releaseDate", "DESC");
@@ -284,6 +292,10 @@ export class MovieService {
       .andWhere(
         `(schedule.showDate >= :today AND schedule.showDate <= :maxDay)`,
         { today, maxDay },
+      )
+      .andWhere(
+        "(schedule.showDate != :today OR schedule.showTime >= :nowTime)",
+        { today, nowTime },
       )
       .distinct(true);
 

@@ -1,7 +1,7 @@
 import express from "express";
 
 import fs from "fs";
-import { accessAsAdmin } from "../../middlewares/auth.middleware";
+import { accessAsAdmin, protect } from "../../middlewares/auth.middleware";
 import { imgUpload } from "../../middlewares/imgUpload";
 import {
   changePassword,
@@ -17,11 +17,11 @@ const router = express.Router();
 
 router.put(
   "/profile/update/:id",
-  accessAsAdmin,
+  protect,
   imgUpload.fields([{ name: "image", maxCount: 1 }]),
   updateProfile,
 );
 
-router.put("/profile/change-password/:id", accessAsAdmin, changePassword);
+router.put("/profile/change-password/:id", protect, changePassword);
 
 export default router;

@@ -1,5 +1,6 @@
 import { Entity, PrimaryGeneratedColumn, Column, ManyToOne } from "typeorm";
 import { Movie } from "./Movie";
+import { User } from "./User";
 
 @Entity()
 export class Review {
@@ -12,15 +13,15 @@ export class Review {
   @Column()
   reviewDate: Date;
 
-  @Column()
-  decription: string;
-
-  @Column()
-  createdAt: Date;
+  @Column({ type: "text" })
+  description: string;
 
   @Column({ nullable: true })
   updatedAt: Date;
 
   @ManyToOne(() => Movie, (movie) => movie.reviews)
   movie: Movie;
+
+  @ManyToOne(() => User, (user) => user.reviews)
+  user: User;
 }

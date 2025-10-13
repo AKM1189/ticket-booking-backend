@@ -20,7 +20,6 @@ export class AuthService {
   ) {
     const existingUser = await this.userRepo.findOneBy({
       email,
-      role: Role.user,
     });
 
     if (existingUser) {

@@ -189,15 +189,18 @@ export class UserService {
         message: "User not found",
       };
     }
-    await this.userRepo.save({ ...user, active: !user.active });
+
+    // flip the active state
+    const newActiveState = !user.active;
+    await this.userRepo.save({ ...user, active: newActiveState });
 
     const message = `${actor?.name} ${
-      user.active ? "deactivated" : "activated"
+      newActiveState ? "activated" : "deactivated"
     } ${user?.name} (${user?.role}) account.`;
 
     addNotification(
-      user.active ? NOTI_TYPE.USER_DEACTIVATED : NOTI_TYPE.USER_ACTIVATED,
-      `User ${user.active ? "Deactivated" : "Activated"}`,
+      newActiveState ? NOTI_TYPE.USER_ACTIVATED : NOTI_TYPE.USER_DEACTIVATED,
+      `User ${newActiveState ? "Activated" : "Deactivated"}`,
       message,
       actor?.id,
     );
@@ -205,7 +208,7 @@ export class UserService {
     return {
       status: 200,
       message: `User ${
-        user.active ? "deactivated" : "activated"
+        newActiveState ? "activated" : "deactivated"
       } successfully.`,
     };
   }

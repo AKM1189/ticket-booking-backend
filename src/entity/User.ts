@@ -12,6 +12,7 @@ import { Booking } from "./Booking";
 import { Theatre } from "./Theatre";
 import { UserNotification } from "./UserNotification";
 import { Notification } from "./Notification";
+import { Review } from "./Review";
 
 @Entity()
 export class User {
@@ -54,6 +55,9 @@ export class User {
     onDelete: "SET NULL",
   })
   theatre?: Theatre;
+
+  @OneToMany(() => Review, (review) => review.user)
+  reviews: Review[];
 
   @OneToMany(
     () => UserNotification,

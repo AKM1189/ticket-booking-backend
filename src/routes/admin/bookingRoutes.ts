@@ -14,7 +14,7 @@ const router = express.Router();
 
 router.get("/bookings", getBookings);
 router.get("/bookings/:id", protect, getBookingById);
-router.post("/bookings", accessAsAdmin, protect, addBooking);
+router.post("/bookings", protect, addBooking);
 router.delete("/bookings/:id", accessAsAdmin, cancelBooking);
 
 export default router;
