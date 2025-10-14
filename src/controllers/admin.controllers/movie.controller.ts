@@ -83,36 +83,23 @@ export const getShowingMovies = async (req: Request, res: Response) => {
     const today = dayjs().format("YYYY-MM-DD");
     const time = dayjs().format("HH:mm:ss");
 
-    const movieQuery = await AppDataSource.getRepository(Movie)
+    const movieQuery = AppDataSource.getRepository(Movie)
       .createQueryBuilder("movie")
-      .innerJoin("movie.schedules", "schedule")
+      .innerJoin("movie.schedules", "schedule", "schedule.showDate = :today AND schedule.showTime >= :time OR schedule.showDate > :today", { today, time })
       .leftJoinAndSelect("movie.genres", "genres")
       .leftJoinAndSelect("movie.casts", "casts")
-      .leftJoinAndSelect("movie.poster", "poster") // include poster
+      .leftJoinAndSelect("movie.poster", "poster")
       .leftJoinAndSelect("movie.photos", "photos")
       .leftJoinAndSelect("movie.reviews", "reviews")
-      .where(
-        `(schedule.showDate = :today AND schedule.showTime >= :time) OR (schedule.showDate > :today)`,
-        { today, time },
-      )
-
-      .andWhere("movie.status IN (:...statuses)", {
+      .where("movie.status IN (:...statuses)", {
         statuses: [MovieStatus.nowShowing, MovieStatus.ticketAvailable],
-      })
-      .distinct(true);
-
-    console.log("user role", user?.role);
-    if (user?.role === Role.staff) {
-      const theatre = await AppDataSource.getRepository(Theatre).findOne({
-        relations: ["staffs"],
-        where: { staffs: { id: user?.id } },
       });
-      if (theatre) {
-        movieQuery
-          .innerJoin("schedule.theatre", "theatre")
-          .andWhere("theatre.id = :id", { id: theatre.id });
-      }
+
+    if (user?.role === Role.staff) {
+      movieQuery
+        .innerJoin("schedule.theatre", "theatre", "theatre.id = :theatreId", { theatreId: user.theatre.id });
     }
+
 
     const movies = await movieQuery.getMany();
 
@@ -131,9 +118,8 @@ export const addMovie = async (req: Request, res: Response) => {
   const poster = files["poster"]?.[0];
   const photos = files["photos[]"] || [];
 
-  const posterUrl = `${req.protocol}://${req.get("host")}/uploads/${
-    poster.filename
-  }`;
+  const posterUrl = `${req.protocol}://${req.get("host")}/uploads/${poster.filename
+    }`;
   const photoUrls = photos.map((file) => {
     return `${req.protocol}://${req.get("host")}/uploads/${file.filename}`;
   });
@@ -187,9 +173,8 @@ export const updateMovie = async (req: Request, res: Response) => {
     };
     const poster = files["poster"]?.[0] || null;
     const photos = files["photos[]"] || [];
-    const posterUrl = `${req.protocol}://${req.get("host")}/uploads/${
-      poster.filename
-    }`;
+    const posterUrl = `${req.protocol}://${req.get("host")}/uploads/${poster.filename
+      }`;
     const photoUrls = photos.map((file) => {
       return `${req.protocol}://${req.get("host")}/uploads/${file.filename}`;
     });

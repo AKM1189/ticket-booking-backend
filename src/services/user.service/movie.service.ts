@@ -75,8 +75,8 @@ export class MovieService {
     if (langList.length) {
       qb.andWhere(
         "(" +
-          langList.map((_, i) => `movie.language LIKE :lang${i}`).join(" OR ") +
-          ")",
+        langList.map((_, i) => `movie.language LIKE :lang${i}`).join(" OR ") +
+        ")",
         Object.fromEntries(langList.map((val, i) => [`lang${i}`, `%${val}%`])),
       );
     }
@@ -84,8 +84,8 @@ export class MovieService {
     if (expList.length) {
       qb.andWhere(
         "(" +
-          expList.map((_, i) => `movie.experience LIKE :exp${i}`).join(" OR ") +
-          ")",
+        expList.map((_, i) => `movie.experience LIKE :exp${i}`).join(" OR ") +
+        ")",
         Object.fromEntries(expList.map((val, i) => [`exp${i}`, `%${val}%`])),
       );
     }
@@ -156,7 +156,7 @@ export class MovieService {
       .leftJoin("schedule.movie", "movie")
       .leftJoin("schedule.theatre", "theatre")
       .leftJoin("schedule.screen", "screen")
-      .where("schedule.showDate = :showDate", { showDate })
+      .where("schedule.showDate = :showDate", { showDate: showDate || dayjs().format('YYYY-MM-DD') })
       .andWhere("schedule.status = :status", { status: ScheduleStatus.active })
       .andWhere("movie.id = :movieId", { movieId })
       .select([

@@ -13,6 +13,11 @@ export const STAFF_NOTI_TYPE = {
   SCHEDULE_DELETED: "SCHEDULE_DELETED",
 };
 
+export const USER_NOTI_TYPE = {
+  NEW_BOOKING: "NEW_BOOKING",
+  CANCEL_BOOKING: "CANCEL_BOOKING",
+};
+
 export const NOTI_TYPE = {
   ...STAFF_NOTI_TYPE,
 

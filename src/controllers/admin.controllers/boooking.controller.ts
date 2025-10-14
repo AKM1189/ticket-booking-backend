@@ -56,6 +56,21 @@ export const getBookingById = async (req: Request, res: Response) => {
   }
 };
 
+export const getBookingByUserId = async (req: Request, res: Response) => {
+  try {
+    const userId = req.params.id as string;
+    const { status, data } = await bookingService.getBookingByUserId(
+      parseInt(userId),
+    );
+
+    res.status(status).json({
+      data,
+    });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
 export const addBooking = async (req: Request, res: Response) => {
   try {
     const { status, message, data } = await bookingService.addBooking(req.body);
@@ -75,6 +90,7 @@ export const cancelBooking = async (req: Request, res: Response) => {
     const user = req.user;
     const { status, message } = await bookingService.cancelBooking(
       bookingId,
+      req.body,
       user,
     );
     res.status(status).json({

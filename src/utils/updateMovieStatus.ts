@@ -4,6 +4,7 @@ import { Movie } from "../entity/Movie";
 import { updateMovie, updateSchedule } from "./updateStatus";
 import { Schedule } from "../entity/Schedule";
 import dayjs from "dayjs";
+import { Booking } from "../entity/Booking";
 
 export const updateMovieStatus = () => {
   cron.schedule("*/5 * * * *", async () => {
@@ -28,17 +29,31 @@ export const updateMovieStatus = () => {
 
     const scheduleRepo = AppDataSource.getRepository(Schedule);
 
-    const schedules = await scheduleRepo.find({
-      relations: ["movie"],
-    });
+    // const schedules = await scheduleRepo.find({
+    //   relations: ["movie", 'bookings'],
+    // });
 
-    const updatedSchedules = [];
+    // const updatedSchedules = [];
+
+    // for (const schedule of schedules) {
+    //   updatedSchedules.push(updateSchedule(schedule));
+    // }
+
+    // await scheduleRepo.save(updatedSchedules);
+    // console.log("Schedule status updated");
+
+    /** ---------------- SCHEDULE STATUS UPDATE ---------------- **/
+    const schedules = await scheduleRepo.find({
+      relations: ["movie", "bookings"],
+    });
+    const bookingRepo = AppDataSource.getRepository(Booking);
+
 
     for (const schedule of schedules) {
-      updatedSchedules.push(updateSchedule(schedule));
+      await updateSchedule(schedule, bookingRepo);
     }
 
-    await scheduleRepo.save(updatedSchedules);
-    console.log("Schedule status updated");
+    console.log("✅ Schedule & Booking statuses updated");
   });
+
 };

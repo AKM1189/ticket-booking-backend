@@ -37,6 +37,9 @@ export class Booking {
   @Column({ nullable: true })
   customerPhone: string;
 
+  @Column({ nullable: true, type: "text" })
+  cancelledReason: string;
+
   @Column({ nullable: true, type: "longtext" })
   note: string;
 

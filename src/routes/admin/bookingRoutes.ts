@@ -7,14 +7,16 @@ import {
   addBooking,
   cancelBooking,
   getBookingById,
+  getBookingByUserId,
   getBookings,
 } from "../../controllers/admin.controllers/boooking.controller";
 
 const router = express.Router();
 
+router.get("/user/bookings/:id", getBookingByUserId);
 router.get("/bookings", getBookings);
 router.get("/bookings/:id", protect, getBookingById);
 router.post("/bookings", protect, addBooking);
-router.delete("/bookings/:id", accessAsAdmin, cancelBooking);
+router.post("/bookings/:id", protect, cancelBooking);
 
 export default router;

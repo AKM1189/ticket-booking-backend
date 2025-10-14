@@ -54,7 +54,7 @@ export class Screen {
   theatre: Theatre;
 
   @OneToMany(() => ScreenSeatType, (screenSeatType) => screenSeatType.screen)
-  seatTypes: SeatType[];
+  seatTypes: ScreenSeatType[];
 
   @OneToMany(() => Schedule, (schedule) => schedule.screen)
   schedules: Schedule[];

@@ -18,11 +18,11 @@ export const generateTicket = async (booking: Booking, schedule: Schedule) => {
     }),
   );
 
-  const newTicket = {
+  const newTicket = ticketRepo.create({
     ticketNumber,
     qrCode,
-    issueAt: new Date(),
-  };
+    issuedAt: new Date(),
+  })
 
   const ticket = await ticketRepo.save(newTicket);
   booking.ticket = ticket;

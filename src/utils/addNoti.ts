@@ -71,3 +71,40 @@ export const addNotification = async (
 
   io.emit("new notification", { message: "new notification" });
 };
+
+export const addUserNotification = async (
+  type: string,
+  title: string,
+  message: string,
+  userId: number,
+) => {
+  const notiRepo = AppDataSource.getRepository(Notification);
+  const userNotiRepo = AppDataSource.getRepository(UserNotification);
+  const userRepo = AppDataSource.getRepository(User);
+
+  const user = await userRepo.findOne({
+    where: { id: userId }
+  });
+
+  const newNoti = notiRepo.create({
+    type,
+    title,
+    message,
+    createdAt: new Date(),
+  });
+
+  const notification = await notiRepo.save(newNoti);
+
+  if (user && user.role === Role.user) {
+    const newUserNoti = userNotiRepo.create({
+      user,
+      notification,
+      read: false,
+    });
+    await userNotiRepo.save(newUserNoti);
+  }
+
+  const io = getIO();
+
+  io.emit("new notification", { message: "new notification" });
+};

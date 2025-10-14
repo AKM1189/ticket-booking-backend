@@ -85,7 +85,7 @@ export const createApp = async () => {
   app.use(adminUrl, dashboardRoutes);
   app.use(adminUrl, profileRoutes);
   app.use(adminUrl, userRoutes);
-  app.use(adminUrl, notiRoutes);
+  app.use("/api/", notiRoutes);
 
   app.use(userUrl, userMovieRoutes);
   app.use(userUrl, userTheatreRoutes);
@@ -141,7 +141,7 @@ const startServer = async () => {
 
       tempSeats[scheduleId] = [
         ...temp,
-        { seatId, userId, expiresAt: Date.now() + 1000 * 30 },
+        { seatId, userId, expiresAt: Date.now() + 1000 * 300 },
       ];
 
       console.log("temp seats", tempSeats[scheduleId]);
