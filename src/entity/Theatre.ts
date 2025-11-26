@@ -8,7 +8,7 @@ export class Theatre {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column()
+  @Column({ nullable: true })
   name: string;
 
   @Column({ nullable: true, type: "longtext" })

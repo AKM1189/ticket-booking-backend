@@ -31,6 +31,18 @@ export const getCast = async (req: Request, res: Response) => {
   }
 };
 
+export const getAllCast = async (req: Request, res: Response) => {
+  try {
+    const { status, data } = await castService.getAllCast();
+
+    res.status(status).json({
+      data,
+    });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
 export const getCastById = async (req: Request, res: Response) => {
   try {
     const castRepo = AppDataSource.getRepository(Cast);

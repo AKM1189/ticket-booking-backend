@@ -26,7 +26,7 @@ export class MovieService {
     movieId?: number,
   ) {
     const today = dayjs().format("YYYY-MM-DD");
-    const nowTime = dayjs().format("hh:mm");
+    const nowTime = dayjs().add(15, "minute").format("HH:mm");
 
     let qb = this.movieRepo
       .createQueryBuilder("movie")
@@ -51,10 +51,12 @@ export class MovieService {
     }
 
     if (type === MovieStatus.nowShowing) {
-      qb.andWhere("schedules.showDate = :today", { today }).andWhere(
-        `(schedules.showTime >= :nowTime)`,
-        { nowTime },
-      );
+      if (type === MovieStatus.nowShowing) {
+        qb.andWhere("schedules.showDate = :today", { today }).andWhere(
+          "schedules.showTime >= :nowTime",
+          { nowTime },
+        );
+      }
     }
 
     if (type === MovieStatus.ticketAvailable) {
@@ -75,8 +77,8 @@ export class MovieService {
     if (langList.length) {
       qb.andWhere(
         "(" +
-        langList.map((_, i) => `movie.language LIKE :lang${i}`).join(" OR ") +
-        ")",
+          langList.map((_, i) => `movie.language LIKE :lang${i}`).join(" OR ") +
+          ")",
         Object.fromEntries(langList.map((val, i) => [`lang${i}`, `%${val}%`])),
       );
     }
@@ -84,8 +86,8 @@ export class MovieService {
     if (expList.length) {
       qb.andWhere(
         "(" +
-        expList.map((_, i) => `movie.experience LIKE :exp${i}`).join(" OR ") +
-        ")",
+          expList.map((_, i) => `movie.experience LIKE :exp${i}`).join(" OR ") +
+          ")",
         Object.fromEntries(expList.map((val, i) => [`exp${i}`, `%${val}%`])),
       );
     }
@@ -156,7 +158,9 @@ export class MovieService {
       .leftJoin("schedule.movie", "movie")
       .leftJoin("schedule.theatre", "theatre")
       .leftJoin("schedule.screen", "screen")
-      .where("schedule.showDate = :showDate", { showDate: showDate || dayjs().format('YYYY-MM-DD') })
+      .where("schedule.showDate = :showDate", {
+        showDate: showDate || dayjs().format("YYYY-MM-DD"),
+      })
       .andWhere("schedule.status = :status", { status: ScheduleStatus.active })
       .andWhere("movie.id = :movieId", { movieId })
       .select([
@@ -246,12 +250,11 @@ export class MovieService {
       .createQueryBuilder("theatre")
       .innerJoin("theatre.schedules", "schedules")
       .innerJoin("schedules.movie", "movie")
-      .where(
-        `(schedules.showDate >= :today AND schedules.showDate <= :maxDay)`,
-        { today, maxDay },
-      )
       .andWhere("schedules.status = :status", {
         status: ScheduleStatus.active,
+      })
+      .where("movie.status IN (:...statuses)", {
+        statuses: [MovieStatus.nowShowing, MovieStatus.ticketAvailable],
       })
       .andWhere("theatre.active = 1")
       .andWhere(
@@ -267,10 +270,13 @@ export class MovieService {
       .createQueryBuilder("movie")
       .leftJoin("movie.schedules", "schedules")
       .leftJoin("schedules.theatre", "theatre")
-      .andWhere(
-        `(schedules.showDate >= :today AND schedules.showDate <= :maxDay)`,
-        { today, maxDay },
-      )
+      // .andWhere(
+      //   `(schedules.showDate >= :today AND schedules.showDate <= :maxDay)`,
+      //   { today, maxDay },
+      // )
+      .where("movie.status IN (:...statuses)", {
+        statuses: [MovieStatus.nowShowing, MovieStatus.ticketAvailable],
+      })
       .andWhere(
         "(schedules.showDate != :today OR schedules.showTime >= :nowTime)",
         { today, nowTime },

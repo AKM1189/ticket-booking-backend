@@ -7,26 +7,32 @@ import { Movie } from "../entity/Movie";
 import { Schedule } from "../entity/Schedule";
 import { ScheduleStatus } from "../types/ScheduleType";
 import { AppDataSource } from "../data-source";
-import { Booking } from "../entity/Booking";
 
 export const updateMovie = (movie: Movie): Movie => {
-  const today = dayjs().format("YYYY-MM-DD");
+  const today = dayjs();
 
   if (!movie.schedules || movie.schedules.length === 0) {
     movie.status = MovieStatus.comingSoon;
+    return movie;
   }
 
-  const showDates = movie?.schedules?.map((schedule) =>
-    dayjs(schedule.showDate).format("YYYY-MM-DD"),
-  );
+  const showDates = movie.schedules.map((s) => dayjs(s.showDate));
 
-  if (showDates?.some((date) => date === today)) {
+  const hasToday = showDates.some((d) => d.isSame(today, "day"));
+  const hasFuture = showDates.some((d) => d.isAfter(today, "day"));
+  const hasPast = showDates.some((d) => d.isBefore(today, "day"));
+  const comingSoon = dayjs(movie.releaseDate).isAfter(today, "day");
+
+  if (hasToday) {
     movie.status = MovieStatus.nowShowing;
-  } else if (showDates?.some((date) => dayjs(date).isAfter(today, "day"))) {
+  } else if (hasFuture) {
     movie.status = MovieStatus.ticketAvailable;
-  } else if (showDates?.some((date) => dayjs(date).isBefore(today, "day"))) {
+  } else if (hasPast) {
     movie.status = MovieStatus.ended;
+  } else if (comingSoon) {
+    movie.status = MovieStatus.comingSoon;
   }
+
   return movie;
 };
 
@@ -95,7 +101,7 @@ export const updateSchedule = async (
     // Update bookings that were confirmed but now ended
     for (const booking of schedule.bookings) {
       if (booking.status === "confirmed") {
-        booking.status = "completed"
+        booking.status = "completed";
         await bookingRepo.save(booking);
       }
     }

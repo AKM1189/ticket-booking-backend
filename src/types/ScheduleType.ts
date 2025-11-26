@@ -21,7 +21,7 @@ export type ScheduleBodyType = {
   showDate: string;
   showTime: string;
   multiplier: string;
-  availableSeats: 180;
+  availableSeats: number;
   isActive: true;
   language: string;
   subtitle: string;

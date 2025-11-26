@@ -50,10 +50,21 @@ export class CastService {
     };
   }
 
+  async getAllCast() {
+    const casts = await this.castRepo.find({
+      relations: ["image"],
+    });
+
+    return {
+      status: 200,
+      data: casts,
+    };
+  }
+
   async addCast(body: CastType, files: any, castImgUrl: string) {
     const { name, role } = body;
 
-    const existingCast = await this.castRepo.findOneBy({ name });
+    const existingCast = await this.castRepo.findOneBy({ name, role });
     if (existingCast) {
       throw new Error("Cast already exists.");
     }
@@ -73,7 +84,7 @@ export class CastService {
     };
   }
   async updateCast(castId: number, body: CastType, castImgUrl: string) {
-    const { name } = body;
+    const { name, role } = body;
 
     const existingCastById = await this.castRepo.findOneBy({ id: castId });
     if (!existingCastById) {
@@ -83,7 +94,7 @@ export class CastService {
       };
     }
 
-    const existingCastByName = await this.castRepo.findOneBy({ name });
+    const existingCastByName = await this.castRepo.findOneBy({ name, role });
     if (existingCastByName && existingCastByName.id !== castId) {
       return {
         status: 400,

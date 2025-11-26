@@ -4,6 +4,7 @@ import { accessAsAdmin, protect } from "../../middlewares/auth.middleware";
 import {
   addCast,
   deleteCast,
+  getAllCast,
   getCast,
   getCastById,
   updateCast,
@@ -27,6 +28,7 @@ const router = express.Router();
 // });
 // const upload = multer({ storage });
 
+router.get("/casts/all", getAllCast);
 router.get("/casts", getCast);
 router.get("/casts/:id", getCastById);
 router.post(

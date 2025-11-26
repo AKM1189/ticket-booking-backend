@@ -140,43 +140,99 @@ export class UserService {
     user: User,
   ) {
     const { name, email, phoneNo, role, theatreId } = body;
+
     const userType =
       role === Role.admin ? "Admin" : role === Role.staff ? "Staff" : "User";
-    const existingUserById = await this.userRepo.findOneBy({ id: userId });
-    if (!existingUserById) {
+
+    // 1. Check if user exists
+    const existingUser = await this.userRepo.findOneBy({ id: userId });
+    if (!existingUser) {
       return {
         status: 404,
-        message: userType + " not found.",
+        message: `${userType} not found.`,
       };
     }
 
+    // 2. Email uniqueness check
     const existingUserByEmail = await this.userRepo.findOneBy({ email });
     if (existingUserByEmail && existingUserByEmail.id !== userId) {
       return {
         status: 400,
-        message: userType + " email already exists.",
+        message: `${userType} email already exists.`,
       };
     }
 
-    const theatre = await this.theatreRepo.findOneBy({
-      id: parseInt(theatreId),
-    });
-    if (!theatre) {
-      throw new Error("Theatre does not exist for assignment");
+    // 3. If STAFF → theatreId MUST exist
+    if (role === Role.staff && !theatreId) {
+      return {
+        status: 400,
+        message: "Staff must belong to a theatre",
+      };
     }
 
-    const updatedUser = { ...existingUserById, name, email, phoneNo, theatre };
+    // 4. If theatreId is provided → validate theatre
+    let theatre = null;
+    if (theatreId) {
+      const parsedTheatreId = Number(theatreId);
+      if (isNaN(parsedTheatreId)) {
+        return { status: 400, message: "Invalid theatreId" };
+      }
 
-    const saved = await this.userRepo.save(updatedUser);
+      theatre = await this.theatreRepo.findOneBy({ id: parsedTheatreId });
+      if (!theatre) {
+        return {
+          status: 404,
+          message: "Theatre does not exist for assignment",
+        };
+      }
+    }
 
-    const message = `${user.name} updated ${saved.name} details.`;
+    // 5. Generate new password always? (Matches your addAdmin logic)
+    const newPassword = generatePassword(12);
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
 
+    // 6. Update user
+    const updatedUser = {
+      ...existingUser,
+      name,
+      email,
+      phoneNo,
+      role,
+      password: hashedPassword,
+      theatre: role === Role.staff ? theatre : null,
+    };
+
+    const savedUser = await this.userRepo.save(updatedUser);
+
+    // 7. Send credentials email ONLY if email changed
+    if (email !== existingUser.email) {
+      const content = `
+      <div style="font-family: Arial, sans-serif; background-color: #f9f9f9; padding: 20px;">
+        <div style="max-width: 500px; margin: auto; background-color: #ffffff; padding: 30px; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); text-align: center;">
+          <h2 style="color: #1b81d1;">Welcome To Movie Palace</h2>
+          <p style="color: #333;">Your <b>${role} account</b> details were updated. Here are your new credentials:</p>
+          <div>Email - ${email}</div>
+          <div>Password - ${newPassword}</div>
+          <p style="font-size: 12px; color: #aaa; margin-top: 30px;">© 2025 Movie Palace</p>
+        </div>
+      </div>
+    `;
+
+      sendEmail(
+        email,
+        `${userType} Account Updated - Movie Palace 🎟️`,
+        content,
+      );
+    }
+
+    // 8. Add notification
+    const message = `${user.name} updated ${savedUser.name} details.`;
     addNotification(NOTI_TYPE.USER_UPDATED, "User Updated", message, user.id);
 
     return {
       status: 200,
-      message: userType + " updated successfully.",
-      data: saved,
+      message: `${userType} updated successfully.`,
+      data: savedUser,
     };
   }
 

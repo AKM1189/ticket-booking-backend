@@ -5,7 +5,7 @@ import { Movie } from "../../entity/Movie";
 import { Schedule } from "../../entity/Schedule";
 import { Theatre } from "../../entity/Theatre";
 import { MovieStatus } from "../../types/MovieType";
-import { Between, In } from "typeorm";
+import { Between, In, Not } from "typeorm";
 import { User } from "../../entity/User";
 import { Role } from "../../types/AuthType";
 import { ScheduleStatus } from "../../types/ScheduleType";
@@ -30,7 +30,10 @@ export class ReportService {
     const [, scheduleTotal] = await this.scheduleRepo.findAndCount();
 
     // Revenue (better: let DB handle the sum if supported)
-    const bookings = await this.bookingRepo.find({ select: ["totalAmount"] });
+    const bookings = await this.bookingRepo.find({
+      select: ["totalAmount"],
+      where: { status: Not("cancelled") },
+    });
     const totalRevenue = bookings.reduce(
       (sum, b) => sum + Number(b.totalAmount),
       0,
@@ -74,7 +77,10 @@ export class ReportService {
       .createQueryBuilder("booking")
       .select("DATE_FORMAT(booking.bookingDate, '%Y-%m')", "month")
       .addSelect("SUM(booking.totalAmount)", "revenue")
-      .where("booking.status = :status", { status: "confirmed" }) // optional filter
+      .where("booking.status IN (:...status)", {
+        status: ["confirmed", "completed"],
+      })
+      // optional filter
       .andWhere("booking.bookingDate >= DATE_SUB(CURDATE(), INTERVAL 12 MONTH)")
       .groupBy("DATE_FORMAT(booking.bookingDate, '%Y-%m')")
       .orderBy("month", "ASC")
@@ -87,6 +93,9 @@ export class ReportService {
       .select("movie.title", "movieTitle")
       .addSelect("COUNT(booking.id)", "bookingCount")
       .where("movie.status = :status", { status: "Now Showing" })
+      .andWhere("booking.status != :bookingStatus", {
+        bookingStatus: "cancelled",
+      })
       .groupBy("movie.id")
       .orderBy("bookingCount", "DESC")
       .getRawMany();
@@ -98,6 +107,9 @@ export class ReportService {
       .select("movie.title", "movieTitle")
       .addSelect("COUNT(booking.id)", "bookingCount")
       .where("movie.status = :status", { status: "Ticket Available" })
+      .andWhere("booking.status != :bookingStatus", {
+        bookingStatus: "cancelled",
+      })
       .groupBy("movie.id")
       .orderBy("COUNT(booking.id)", "DESC")
       .getRawMany();
@@ -133,7 +145,7 @@ export class ReportService {
       .addSelect("schedule.availableSeats", "availableSeats")
       .addSelect("schedule.status", "status")
       .addSelect("movie.title", "movieTitle")
-      .addSelect("theatre.name", "theatreName")
+      .addSelect("theatre.location", "theatreName")
       .addSelect("screen.name", "screenName")
       .where("schedule.showDate > :today", { today })
       .andWhere("schedule.status NOT IN (:...excluded)", {

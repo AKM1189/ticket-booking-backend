@@ -3,6 +3,7 @@ import { Review } from "../../entity/Review";
 import { ReviewInputType } from "../../types/ReviewType";
 import { Movie } from "../../entity/Movie";
 import { User } from "../../entity/User";
+import { calculateRating } from "../../utils/calculateRating";
 
 export class ReviewService {
   private reviewRepo = AppDataSource.getRepository(Review);
@@ -13,8 +14,8 @@ export class ReviewService {
     const { rating, description, movieId } = body;
 
     const existingReview = await this.reviewRepo.findOne({
-      relations: ["user"],
-      where: { user: { id: userId } },
+      relations: ["user", "movie"],
+      where: { user: { id: userId }, movie: { id: movieId } },
     });
     if (existingReview) {
       throw new Error("Review already exists.");
@@ -40,6 +41,15 @@ export class ReviewService {
     });
 
     await this.reviewRepo.save(newReview);
+
+    const reviewedMovie = await this.movieRepo.findOne({
+      relations: ["reviews"],
+      where: { id: movieId },
+    });
+    const movieRating = calculateRating(reviewedMovie, rating);
+    movie.rating = movieRating;
+    await this.movieRepo.save(movie);
+
     return {
       status: 200,
       message: "Review added successfully",
@@ -47,6 +57,7 @@ export class ReviewService {
     };
   }
   async updateReview(reviewId: number, body: ReviewInputType) {
+    const { rating, movieId } = body;
     const existingReview = await this.reviewRepo.findOneBy({ id: reviewId });
     if (!existingReview) {
       throw new Error("Review not found.");
@@ -54,6 +65,14 @@ export class ReviewService {
 
     const updatedGenre = { ...existingReview, ...body };
     const saved = await this.reviewRepo.save(updatedGenre);
+
+    const movie = await this.movieRepo.findOne({
+      relations: ["reviews"],
+      where: { id: movieId },
+    });
+    const movieRating = calculateRating(movie);
+    movie.rating = movieRating;
+    await this.movieRepo.save(movie);
 
     return {
       status: 200,

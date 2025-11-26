@@ -129,6 +129,8 @@ export class MovieService {
       const removedGenres = existingMovie.genres.filter(
         (genre) => !bodyGenreIds.includes(genre.id),
       );
+      console.log("new genres", newGenres);
+      console.log("removed genres", removedGenres);
 
       if (newGenres.length || removedGenres.length) {
         await this.processGenreMovieCount(newGenres, removedGenres);

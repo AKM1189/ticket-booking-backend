@@ -2,9 +2,6 @@ import { IsEmail, IsString, MaxLength, MinLength } from "class-validator";
 
 export class CreateTheatreDto {
   @IsString()
-  name: string;
-
-  @IsString()
   location: string;
 
   @IsString()

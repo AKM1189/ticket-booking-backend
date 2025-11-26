@@ -70,7 +70,7 @@ export class ScheduleService {
       if (search && date) {
         whereClause = [
           { showDate: date, movie: { title: Like(`%${search}%`) } },
-          { showDate: date, theatre: { name: Like(`%${search}%`) } },
+          { showDate: date, theatre: { location: Like(`%${search}%`) } },
           { showDate: date, screen: { name: Like(`%${search}%`) } },
           { showDate: date, showTime: Like(`%${search}%`) },
           { showDate: date, status: Like(`%${search}%`) },
@@ -78,7 +78,7 @@ export class ScheduleService {
       } else if (search) {
         whereClause = [
           { movie: { title: Like(`%${search}%`) } },
-          { theatre: { name: Like(`%${search}%`) } },
+          { theatre: { location: Like(`%${search}%`) } },
           { screen: { name: Like(`%${search}%`) } },
           { showTime: Like(`%${search}%`) },
           { status: Like(`%${search}%`) },
@@ -134,6 +134,57 @@ export class ScheduleService {
     };
   }
 
+  // async getScheduleByShowDetail(
+  //   movieId: string,
+  //   theatreId: string,
+  //   screenId: string,
+  //   showDate: string,
+  //   showTime: string,
+  // ) {
+  //   const today = dayjs().format("YYYY-MM-DD");
+  //   const time = dayjs().format("HH:mm:ss");
+
+  //   const schedules = await AppDataSource.getRepository(Schedule)
+  //     .createQueryBuilder("schedule")
+  //     .where("schedule.movieId = :movieId", { movieId })
+  //     .andWhere("schedule.theatreId = :theatreId", { theatreId })
+  //     .andWhere("schedule.screenId = :screenId", { screenId })
+  //     .andWhere("schedule.showDate = :showDate", { showDate })
+  //     .andWhere("schedule.showTime = :showTime", { showTime })
+  //     .andWhere("schedule.status != :status", {
+  //       status: ScheduleStatus.inActive,
+  //     })
+  //     .getMany();
+
+  //   if (!schedules || !schedules.length) {
+  //     return {
+  //       status: 404,
+  //       message: "No schedule found for this show detail",
+  //     };
+  //   }
+
+  //   const screen = await this.screenRepo.findOne({
+  //     where: { id: parseInt(screenId) },
+  //   });
+  //   const seatTypes = await this.seatTypeRepo.find();
+
+  //   const seatTypeList = seatTypes.map((item) => {
+  //     const price = item.price * schedules[0]?.multiplier * screen?.multiplier;
+  //     return {
+  //       ...item,
+  //       price: parseFloat(price.toString()).toFixed(2),
+  //     };
+  //   });
+
+  //   const updatedSchedule = {
+  //     ...schedules[0],
+  //     priceList: seatTypeList,
+  //   };
+  //   return {
+  //     status: 200,
+  //     data: updatedSchedule,
+  //   };
+  // }
   async getScheduleByShowDetail(
     movieId: string,
     theatreId: string,
@@ -141,8 +192,11 @@ export class ScheduleService {
     showDate: string,
     showTime: string,
   ) {
-    const today = dayjs().format("YYYY-MM-DD");
-    const time = dayjs().format("HH:mm:ss");
+    const parsedScreenId = Number(screenId);
+
+    if (isNaN(parsedScreenId)) {
+      return { status: 400, message: "Invalid screenId" };
+    }
 
     const schedules = await AppDataSource.getRepository(Schedule)
       .createQueryBuilder("schedule")
@@ -156,26 +210,32 @@ export class ScheduleService {
       })
       .getMany();
 
+    if (!schedules.length) {
+      return { status: 404, message: "No schedule found" };
+    }
+
     const screen = await this.screenRepo.findOne({
-      where: { id: parseInt(screenId) },
+      where: { id: parsedScreenId },
     });
+
     const seatTypes = await this.seatTypeRepo.find();
 
     const seatTypeList = seatTypes.map((item) => {
-      const price = item.price * schedules[0]?.multiplier * screen?.multiplier;
+      const price =
+        item.price * schedules[0].multiplier * (screen?.multiplier ?? 1);
+
       return {
         ...item,
-        price: parseFloat(price.toString()).toFixed(2),
+        price: price.toFixed(2),
       };
     });
 
-    const updatedSchedule = {
-      ...schedules[0],
-      priceList: seatTypeList,
-    };
     return {
       status: 200,
-      data: updatedSchedule,
+      data: {
+        ...schedules[0],
+        priceList: seatTypeList,
+      },
     };
   }
 
@@ -321,7 +381,7 @@ export class ScheduleService {
       user.name
     } created New Schedule for '${movie?.title.toUpperCase()}' at ${
       screen.name
-    } on ${show?.showDate}, ${show?.showTime.slice(0, 5)}).`;
+    } on ${show?.showDate}, ${show?.showTime.slice(0, 5)}.`;
 
     addNotification(
       NOTI_TYPE.SCHEDULE_ADDED,

@@ -117,8 +117,14 @@ export class ScreenService {
   }
 
   async addScreen(body: Omit<ScreenType, "id">, user: User) {
-    const existingGenre = await this.screenRepo.findOneBy({ name: body.name });
-    if (existingGenre) {
+    const existingScreen = await this.screenRepo.findOne({
+      relations: ["theatre"],
+      where: {
+        name: body.name,
+        theatre: { id: parseInt(body.theatreId) },
+      },
+    });
+    if (existingScreen) {
       throw new Error("Screen already exists.");
     }
 
@@ -199,8 +205,17 @@ export class ScreenService {
       };
     }
 
-    const existingScreenByName = await this.screenRepo.findOneBy({ name });
-    if (existingScreenByName && existingScreenByName.id !== screenId) {
+    const existingScreenByName = await this.screenRepo.findOne({
+      relations: ["theatre"],
+      where: {
+        name,
+      },
+    });
+    if (
+      existingScreenByName &&
+      existingScreenByName.id !== screenId &&
+      parseInt(body.theatreId) === existingScreenByName.theatre.id
+    ) {
       return {
         status: 400,
         message: "Screen name already exists.",
@@ -354,7 +369,7 @@ export class ScreenService {
 
     await this.screenRepo.save({ ...screen, active: !screen.active });
 
-    const message = `${user.name} deactivated ${screen.name} screen in '${theatre.name}' theatre.`;
+    const message = `${user.name} deactivated ${screen.name} screen in '${theatre.location}' theatre.`;
 
     addNotification(
       screen.active ? NOTI_TYPE.SCREEN_DEACTIVATED : NOTI_TYPE.SCREEN_ACTIVATED,

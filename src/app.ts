@@ -26,6 +26,7 @@ import userMovieRoutes from "./routes/user/movieRoutes";
 import userTheatreRoutes from "./routes/user/theatreRoutes";
 import userScheduleRoutes from "./routes/user/scheduleRoutes";
 import userReviewRoutes from "./routes/user/reviewRoutes";
+import userAboutRoutes from "./routes/user/aboutRoutes";
 
 import { updateMovieStatus } from "./utils/updateMovieStatus";
 import { getBookedSeats } from "./utils/getBookedSeats";
@@ -91,6 +92,7 @@ export const createApp = async () => {
   app.use(userUrl, userTheatreRoutes);
   app.use(userUrl, userScheduleRoutes);
   app.use(userUrl, userReviewRoutes);
+  app.use(userUrl, userAboutRoutes);
 
   return app;
 };
