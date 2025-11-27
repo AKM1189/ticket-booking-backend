@@ -133,7 +133,7 @@ export class ReportService {
 
   async recentRecords(user: User) {
     const today = dayjs().format("YYYY-MM-DD");
-    const upcomingSchedules = await this.scheduleRepo
+    const schedulesQuery = this.scheduleRepo
       .createQueryBuilder("schedule")
       .innerJoin("schedule.movie", "movie")
       .innerJoin("schedule.theatre", "theatre")
@@ -152,8 +152,13 @@ export class ReportService {
         excluded: [ScheduleStatus.completed, ScheduleStatus.inActive],
       })
       .orderBy("schedule.showDate", "DESC")
-      .take(5)
-      .getRawMany();
+      .take(5);
+
+    if (user?.role === Role.staff) {
+      schedulesQuery.andWhere("theatre.id = :theatreId", {
+        theatreId: user.theatre.id,
+      });
+    }
 
     const query = this.bookingRepo
       .createQueryBuilder("booking")
@@ -178,6 +183,7 @@ export class ReportService {
       query.andWhere("user.id = :userId", { userId: user.id });
     }
     const recentBookings = await query.getRawMany();
+    const upcomingSchedules = await schedulesQuery.getRawMany();
 
     return {
       status: 200,
