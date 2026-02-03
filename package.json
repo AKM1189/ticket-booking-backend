@@ -42,11 +42,12 @@
       "serverless-http": "^3.2.0",
       "socket.io": "^4.8.1",
       "tsconfig-paths": "^4.2.0",
+      "tsx": "^4.21.0",
       "typeorm": "0.3.24"
    },
    "scripts": {
-   "build": "tsc",
-   "start": "node build/app.js", 
-   "dev": "node --loader ts-node/esm src/app.ts" 
+   "dev": "tsx watch src/app.ts",
+   "start": "tsx src/app.ts",
+   "build": "tsc"
 }
 }
