@@ -2,7 +2,7 @@
    "name": "ticket-booking-backend-typeorm",
    "version": "0.0.1",
    "description": "Awesome project developed with TypeORM.",
-   "type": "commonjs",
+   "type": "module",
    "devDependencies": {
       "@types/bcrypt": "^5.0.2",
       "@types/cookie-parser": "^1.4.8",

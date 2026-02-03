@@ -4,7 +4,7 @@
     "types": ["node"],
     "typeRoots": ["./node_modules/@types", "./types"],
     "target": "es2021",
-    "module": "commonjs",
+    "module": "CommonJS",
     "moduleResolution": "node",
     "outDir": "./build",
     "emitDecoratorMetadata": true,
