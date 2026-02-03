@@ -1,3 +1,4 @@
+import "reflect-metadata";
 import { User } from "./entity/User";
 import express from "express";
 import cors from "cors";

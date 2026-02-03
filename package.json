@@ -47,7 +47,7 @@
    },
    "scripts": {
    "dev": "tsx watch src/app.ts",
-   "start": "tsx src/app.ts",
+   "start": "tsx --tsconfig tsconfig.json src/app.ts",
    "build": "tsc"
 }
 }
