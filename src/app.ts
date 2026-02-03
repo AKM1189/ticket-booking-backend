@@ -31,6 +31,7 @@ import userAboutRoutes from "./routes/user/aboutRoutes";
 import { updateMovieStatus } from "./utils/updateMovieStatus";
 import { getBookedSeats } from "./utils/getBookedSeats";
 import { initSocket } from "./socket";
+import { initializeDB } from "./config/db";
 
 dotenv.config();
 
@@ -44,8 +45,7 @@ declare global {
 
 export const createApp = async () => {
   console.log("Initializing DB...");
-  await AppDataSource.initialize();
-  console.log("DB initialized!");
+  await initializeDB();
 
   const app = express();
 
