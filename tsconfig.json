@@ -1,16 +1,17 @@
 {
   "compilerOptions": {
     "lib": ["es2021", "DOM"],
-    "types": ["node"],
-    "typeRoots": ["./node_modules/@types", "./types"],
-    "target": "es2021",
-    "module": "es2022",
-    "moduleResolution": "node",
-    "allowSyntheticDefaultImports": true,
+    "module": "CommonJS", // Change from es2022
+    "target": "ES2021",
+    "moduleResolution": "node", // Change from node
     "outDir": "./build",
+    "rootDir": "./src", // Explicitly set your source root
+    "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true,
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
     "sourceMap": true,
-    "esModuleInterop": true
-  }
+    "skipLibCheck": true
+  },
+  "include": ["src/**/*"]
 }
