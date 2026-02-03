@@ -1,26 +1,5 @@
-import { Readable } from "stream";
 import cloudinary from "../config/cloudinary";
 import { randomUUID } from "crypto";
-
-// export function uploadImage(file: Express.Multer.File): Promise<string> {
-//   const publicId = `movies/${uuid()}`;
-
-//   return new Promise((resolve, reject) => {
-//     const uploadStream = cloudinary.uploader.upload_stream(
-//       {
-//         public_id: publicId,
-//         folder: "movies",
-//         resource_type: "image",
-//       },
-//       (error, result) => {
-//         if (error) return reject(error);
-//         if (result) resolve(result.public_id);
-//       },
-//     );
-
-//     Readable.from(file.buffer).pipe(uploadStream);
-//   });
-// }
 
 export async function uploadImage(file: Express.Multer.File): Promise<string> {
   if (!file?.buffer) throw new Error("No file provided");
