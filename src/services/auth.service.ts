@@ -67,7 +67,6 @@ export class AuthService {
         "Your account has been deactivated. Please contact support.",
       );
     }
-
     const accessToken = jwt.sign(
       { email, role: user.role },
       process.env.JWT_SECRET,

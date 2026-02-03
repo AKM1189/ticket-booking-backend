@@ -14,6 +14,7 @@ import multer from "multer";
 import fs from "fs";
 import { accessAsAdmin, protect } from "../../middlewares/auth.middleware";
 import { imgUpload } from "../../middlewares/imgUpload";
+import { r2Upload } from "../../middlewares/r2Upload";
 
 const router = express.Router();
 
@@ -38,7 +39,11 @@ router.get("/movies/:id", getMovieById);
 router.post(
   "/movies",
   accessAsAdmin,
-  imgUpload.fields([
+  // imgUpload.fields([
+  //   { name: "poster", maxCount: 1 },
+  //   { name: "photos[]", maxCount: 5 },
+  // ]),
+  r2Upload.fields([
     { name: "poster", maxCount: 1 },
     { name: "photos[]", maxCount: 5 },
   ]),

@@ -85,7 +85,12 @@ export const getShowingMovies = async (req: Request, res: Response) => {
 
     const movieQuery = AppDataSource.getRepository(Movie)
       .createQueryBuilder("movie")
-      .innerJoin("movie.schedules", "schedule", "schedule.showDate = :today AND schedule.showTime >= :time OR schedule.showDate > :today", { today, time })
+      .innerJoin(
+        "movie.schedules",
+        "schedule",
+        "schedule.showDate = :today AND schedule.showTime >= :time OR schedule.showDate > :today",
+        { today, time },
+      )
       .leftJoinAndSelect("movie.genres", "genres")
       .leftJoinAndSelect("movie.casts", "casts")
       .leftJoinAndSelect("movie.poster", "poster")
@@ -96,10 +101,13 @@ export const getShowingMovies = async (req: Request, res: Response) => {
       });
 
     if (user?.role === Role.staff) {
-      movieQuery
-        .innerJoin("schedule.theatre", "theatre", "theatre.id = :theatreId", { theatreId: user.theatre.id });
+      movieQuery.innerJoin(
+        "schedule.theatre",
+        "theatre",
+        "theatre.id = :theatreId",
+        { theatreId: user.theatre.id },
+      );
     }
-
 
     const movies = await movieQuery.getMany();
 
@@ -117,31 +125,34 @@ export const addMovie = async (req: Request, res: Response) => {
   };
   const poster = files["poster"]?.[0];
   const photos = files["photos[]"] || [];
+  console.log("poster", poster);
+  console.log("photos", photos);
 
-  const posterUrl = `${req.protocol}://${req.get("host")}/uploads/${poster.filename
-    }`;
-  const photoUrls = photos.map((file) => {
-    return `${req.protocol}://${req.get("host")}/uploads/${file.filename}`;
-  });
+  // const posterUrl = `${req.protocol}://${req.get("host")}/uploads/${
+  //   poster.filename
+  // }`;
+  // const photoUrls = photos.map((file) => {
+  //   return `${req.protocol}://${req.get("host")}/uploads/${file.filename}`;
+  // });
 
   const user = req.user;
 
-  try {
-    const { status, message, data } = await movieService.addMovie(
-      req.body,
-      posterUrl,
-      photoUrls,
-      user,
-    );
+  // try {
+  //   const { status, message, data } = await movieService.addMovie(
+  //     req.body,
+  //     posterUrl,
+  //     photoUrls,
+  //     user,
+  //   );
 
-    res.status(status).json({
-      status,
-      message,
-      data,
-    });
-  } catch (err) {
-    res.status(500).json({ err, message: err.message });
-  }
+  //   res.status(status).json({
+  //     status,
+  //     message,
+  //     data,
+  //   });
+  // } catch (err) {
+  //   res.status(500).json({ err, message: err.message });
+  // }
 };
 
 export const getMovieById = async (req: Request, res: Response) => {
@@ -173,8 +184,9 @@ export const updateMovie = async (req: Request, res: Response) => {
     };
     const poster = files["poster"]?.[0] || null;
     const photos = files["photos[]"] || [];
-    const posterUrl = `${req.protocol}://${req.get("host")}/uploads/${poster.filename
-      }`;
+    const posterUrl = `${req.protocol}://${req.get("host")}/uploads/${
+      poster.filename
+    }`;
     const photoUrls = photos.map((file) => {
       return `${req.protocol}://${req.get("host")}/uploads/${file.filename}`;
     });
