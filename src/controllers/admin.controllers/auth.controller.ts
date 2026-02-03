@@ -3,6 +3,8 @@ import { Request, Response } from "express";
 import { Role } from "../../types/AuthType";
 import { AppDataSource } from "../../data-source";
 import { User } from "../../entity/User";
+import { formatUser } from "../../utils/response-formatter/user.formatter";
+import { getPublicUrl } from "../../middlewares/cloudinaryUpload";
 
 const authService = new AuthService();
 const userRepo = AppDataSource.getRepository(User);
@@ -93,9 +95,21 @@ export const getUserProfile = async (req: Request, res: Response) => {
     const currentUser = await userRepo.findOne({
       relations: ["image", "theatre"],
       where: { id: user.id },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        role: true,
+        phoneNo: true,
+        image: true,
+        createdAt: true,
+        updatedAt: true,
+        active: true,
+        theatre: true,
+      },
     });
 
-    res.status(200).json(currentUser);
+    res.status(200).json(formatUser(currentUser));
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
@@ -114,7 +128,7 @@ export const getAdminProfile = async (req: Request, res: Response) => {
         name: user.name,
         email: user.email,
         role: user.role,
-        image: user.image,
+        image: { ...user.image, url: getPublicUrl(user.image.url) },
         createdAt: user.createdAt,
         updatedAt: user.updatedAt,
         theatre: user.theatre,

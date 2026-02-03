@@ -3,6 +3,11 @@ import { Request, Response } from "express";
 import { getQueryParams } from "../../utils/queryParams";
 import { Cast } from "../../entity/Cast";
 import { CastService } from "../../services/admin.service/cast.service";
+import { FilesType } from "../../types/ImageType";
+import {
+  formatCast,
+  formatCasts,
+} from "../../utils/response-formatter/cast.formatter";
 
 const castService = new CastService();
 
@@ -23,7 +28,7 @@ export const getCast = async (req: Request, res: Response) => {
     );
 
     res.status(status).json({
-      data,
+      data: formatCasts(data),
       pagination,
     });
   } catch (err) {
@@ -36,7 +41,7 @@ export const getAllCast = async (req: Request, res: Response) => {
     const { status, data } = await castService.getAllCast();
 
     res.status(status).json({
-      data,
+      data: formatCasts(data),
     });
   } catch (err) {
     res.status(500).json({ message: err.message });
@@ -52,7 +57,7 @@ export const getCastById = async (req: Request, res: Response) => {
       res.status(404).json({ message: "Cast not found" });
     }
     res.status(200).json({
-      data: cast,
+      data: formatCast(cast),
     });
   } catch (err) {
     res.status(500).json({ message: err.message });
@@ -60,18 +65,11 @@ export const getCastById = async (req: Request, res: Response) => {
 };
 
 export const addCast = async (req: Request, res: Response) => {
-  const files = req.files as {
-    [fieldname: string]: Express.Multer.File[];
-  };
-  const castImg = files["image"]?.[0];
-  const castImgUrl = `${req.protocol}://${req.get("host")}/uploads/${
-    castImg.filename
-  }`;
+  const files = req.files as FilesType;
   try {
     const { status, message, data } = await castService.addCast(
       req.body,
-      req.files,
-      castImgUrl,
+      files,
     );
 
     res.status(status).json({
@@ -85,23 +83,14 @@ export const addCast = async (req: Request, res: Response) => {
 };
 
 export const updateCast = async (req: Request, res: Response) => {
-  const files = req.files as {
-    [fieldname: string]: Express.Multer.File[];
-  };
-  const castImg = files["image"]?.[0];
-  const castImgUrl =
-    castImg &&
-    `${req.protocol}://${req.get("host")}/uploads/${castImg.filename}`;
-  console.log("castImgUrl", files);
-
-  console.log("castImgUrl", castImgUrl);
+  const files = req.files as FilesType;
 
   try {
     const castId = parseInt(req.params.id as string);
     const { status, message } = await castService.updateCast(
       castId,
       req.body,
-      castImgUrl,
+      files,
     );
     res.status(status).json({
       status,

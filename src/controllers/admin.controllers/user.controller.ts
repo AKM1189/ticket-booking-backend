@@ -5,6 +5,10 @@ import { getQueryParams } from "../../utils/queryParams";
 import { Genre } from "../../entity/Genre";
 import { UserService } from "../../services/admin.service/user.service";
 import { Role } from "../../types/AuthType";
+import {
+  formatUser,
+  formatUsers,
+} from "../../utils/response-formatter/user.formatter";
 
 const userService = new UserService();
 
@@ -23,29 +27,13 @@ export const getUsers = async (req: Request, res: Response) => {
     );
 
     res.status(status).json({
-      data,
+      data: formatUsers(data),
       pagination,
     });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
 };
-
-// export const getGenreById = async (req: Request, res: Response) => {
-//   try {
-//     const genreRepo = AppDataSource.getRepository(Genre);
-//     const id = parseInt(req.params.id as string);
-//     const genre = await genreRepo.findOneBy({ id });
-//     if (!genre) {
-//       res.status(404).json({ message: "Genre not found" });
-//     }
-//     res.status(200).json({
-//       data: genre,
-//     });
-//   } catch (err) {
-//     res.status(500).json({ message: err.message });
-//   }
-// };
 
 export const addAdmin = async (req: Request, res: Response) => {
   try {

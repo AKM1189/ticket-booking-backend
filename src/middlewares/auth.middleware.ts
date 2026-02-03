@@ -99,7 +99,6 @@ export const accessAsAdmin = async (
       req.user = adminUser ? adminUser : staffUser; // Attach user to the request object
       next();
     } catch (err) {
-      console.log("error admin", err);
       if ((err.name = "TokenExpiredError")) {
         res.status(408).json({
           message: "Token expired. Please log in again",

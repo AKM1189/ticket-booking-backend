@@ -2,12 +2,13 @@ import { AppDataSource } from "../data-source";
 import { Image } from "../entity/Image";
 import { User } from "../entity/User";
 import bcrypt from "bcrypt";
+import { uploadImage } from "../middlewares/cloudinaryUpload";
 
 export class ProfileService {
   private userRepo = AppDataSource.getRepository(User);
   private imageRepo = AppDataSource.getRepository(Image);
 
-  async updateProfile(userId: number, body, imageUrl: string | null) {
+  async updateProfile(userId: number, body, imageFile: Express.Multer.File) {
     const { name, email, phoneNo, image } = body;
 
     const user = await this.userRepo.findOne({
@@ -22,8 +23,9 @@ export class ProfileService {
     user.name = name;
     user.email = email;
     user.phoneNo = phoneNo;
-    if (imageUrl) {
-      const profileImage = await this.imageRepo.save({ url: imageUrl });
+    if (imageFile) {
+      const publicId = await uploadImage(imageFile);
+      const profileImage = await this.imageRepo.save({ url: publicId });
       user.image = profileImage;
     }
 

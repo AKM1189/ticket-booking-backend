@@ -62,6 +62,33 @@ export class UserService {
     };
   }
 
+  async getAdminByEmail(email: string) {
+    return this.userRepo.findOne({
+      where: { email, role: Role.admin },
+      relations: ["image"],
+      select: {
+        name: true,
+        email: true,
+        image: true,
+        phoneNo: true,
+      },
+    });
+  }
+
+  async getStaffByEmail(email: string) {
+    return this.userRepo.findOne({
+      where: { email, role: Role.staff },
+      relations: ["theatre", "image"],
+      select: {
+        name: true,
+        email: true,
+        image: true,
+        phoneNo: true,
+        theatre: true,
+      },
+    });
+  }
+
   async addAdmin(body: UserBodyType, user: User) {
     const { name, email, phoneNo, role, theatreId } = body;
     const userType =

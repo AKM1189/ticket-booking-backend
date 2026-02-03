@@ -3,27 +3,17 @@ import { Request, Response } from "express";
 
 const profileService = new ProfileService();
 export const updateProfile = async (req: Request, res: Response) => {
-  let profileImgUrl: string | null = null; // allow null if no image
-
-  if (req.files) {
-    const files = req.files as {
-      [fieldname: string]: Express.Multer.File[];
-    };
-
-    const profileImg = files["image"]?.[0];
-    if (profileImg) {
-      profileImgUrl = `${req.protocol}://${req.get("host")}/uploads/${
-        profileImg.filename
-      }`;
-    }
-  }
+  const files = req.files as {
+    [fieldname: string]: Express.Multer.File[];
+  };
+  const imageFile = files?.["image"]?.[0];
 
   try {
     const userId = parseInt(req.params.id as string);
     const { status, message, data } = await profileService.updateProfile(
       userId,
       req.body,
-      profileImgUrl,
+      imageFile,
     );
     res.status(status).json({
       status,
