@@ -1,4 +1,3 @@
-import { AppDataSource } from "./data-source";
 import { User } from "./entity/User";
 import express from "express";
 import cors from "cors";
@@ -8,7 +7,6 @@ import path from "path";
 import { createServer } from "http";
 import { Server } from "socket.io";
 
-// Import your routes
 import authRoutes from "./routes/authRoutes";
 import movieRoutes from "./routes/admin/movieRoutes";
 import genreRoutes from "./routes/admin/genreRoutes";
@@ -30,11 +28,11 @@ import userAboutRoutes from "./routes/user/aboutRoutes";
 
 import { updateMovieStatus } from "./utils/updateMovieStatus";
 import { getBookedSeats } from "./utils/getBookedSeats";
-import { initSocket } from "./socket";
 import { initializeDB } from "./config/db";
 
 dotenv.config();
 
+/* ---------- Types ---------- */
 declare global {
   namespace Express {
     interface Request {
@@ -43,16 +41,22 @@ declare global {
   }
 }
 
-export const createApp = async () => {
-  console.log("Initializing DB...");
+interface TempSeat {
+  seatId: string;
+  userId: string;
+  expiresAt: number;
+}
+
+/* ---------- SERVER ---------- */
+const startServer = async () => {
+  console.log("🔌 Initializing database...");
   await initializeDB();
 
   const app = express();
 
-  // Middlewares
   const allowedOrigins =
     process.env.NODE_ENV === "production"
-      ? [process.env.PRODUCTION_FRONTEND_URL]
+      ? [process.env.PRODUCTION_FRONTEND_URL!]
       : ["http://localhost:5178"];
 
   app.use(
@@ -66,154 +70,104 @@ export const createApp = async () => {
   app.use(express.urlencoded({ extended: false }));
   app.use(cookieParser());
 
-  // Static files
   app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
-  // API routes
-  const authUrl = "/api/auth/";
-  const adminUrl = "/api/admin/";
-  const userUrl = "/api/user/";
+  /* ---------- ROUTES ---------- */
+  app.use("/api/auth", authRoutes);
+  app.use("/api/admin", movieRoutes);
+  app.use("/api/admin", genreRoutes);
+  app.use("/api/admin", castRoutes);
+  app.use("/api/admin", theatreRoutes);
+  app.use("/api/admin", screenRoutes);
+  app.use("/api/admin", seatTypeRoute);
+  app.use("/api/admin", scheduleRoutes);
+  app.use("/api/admin", bookingRoutes);
+  app.use("/api/admin", dashboardRoutes);
+  app.use("/api/admin", profileRoutes);
+  app.use("/api/admin", userRoutes);
+  app.use("/api", notiRoutes);
 
-  app.use(authUrl, authRoutes);
-  app.use(adminUrl, movieRoutes);
-  app.use(adminUrl, genreRoutes);
-  app.use(adminUrl, castRoutes);
-  app.use(adminUrl, theatreRoutes);
-  app.use(adminUrl, screenRoutes);
-  app.use(adminUrl, seatTypeRoute);
-  app.use(adminUrl, scheduleRoutes);
-  app.use(adminUrl, bookingRoutes);
-  app.use(adminUrl, dashboardRoutes);
-  app.use(adminUrl, profileRoutes);
-  app.use(adminUrl, userRoutes);
-  app.use("/api/", notiRoutes);
+  app.use("/api/user", userMovieRoutes);
+  app.use("/api/user", userTheatreRoutes);
+  app.use("/api/user", userScheduleRoutes);
+  app.use("/api/user", userReviewRoutes);
+  app.use("/api/user", userAboutRoutes);
 
-  app.use(userUrl, userMovieRoutes);
-  app.use(userUrl, userTheatreRoutes);
-  app.use(userUrl, userScheduleRoutes);
-  app.use(userUrl, userReviewRoutes);
-  app.use(userUrl, userAboutRoutes);
+  app.get("/", (_, res) => {
+    res.json({ status: "API + Socket.IO running" });
+  });
 
-  return app;
-};
-
-interface TempSeat {
-  seatId: string;
-  userId: string;
-  expiresAt: number; // timestamp when the 2 minutes expire
-}
-
-// Main server startup
-const startServer = async () => {
-  const app = await createApp();
-
-  // Create HTTP server
+  /* ---------- SOCKET ---------- */
   const server = createServer(app);
-
-  // Attach Socket.IO
-  const io = initSocket(server);
+  const io = new Server(server, {
+    cors: { origin: "*" },
+  });
 
   const tempSeats: Record<string, TempSeat[]> = {};
 
   io.on("connection", (socket) => {
-    console.log(`Socket connected: ${socket.id}`);
+    console.log("🔗 Socket connected:", socket.id);
 
     socket.on("join schedule", async (scheduleId: string) => {
       socket.join(scheduleId);
-      console.log("joined room", scheduleId);
-      // Send initial seat status
-      const booked = await getBookedSeats(parseInt(scheduleId));
 
-      // const temp = tempSeats[scheduleId]?.map((s) => s.seatId) || [];
-      console.log("booked", booked, "temp", tempSeats[scheduleId]);
-
-      io.to(scheduleId).emit("update temp seats", tempSeats[scheduleId]);
+      const booked = await getBookedSeats(+scheduleId);
       socket.emit("booked seats", booked);
+      socket.emit("update temp seats", tempSeats[scheduleId] || []);
     });
 
-    // Select seat
     socket.on("select seat", async ({ scheduleId, seatId, userId }) => {
-      const booked = await getBookedSeats(parseInt(scheduleId));
+      const booked = await getBookedSeats(+scheduleId);
       const temp = tempSeats[scheduleId] || [];
 
       if (booked.includes(seatId) || temp.some((s) => s.seatId === seatId)) {
-        socket.emit("booked seats", booked);
         return;
       }
 
       tempSeats[scheduleId] = [
         ...temp,
-        { seatId, userId, expiresAt: Date.now() + 1000 * 300 },
+        { seatId, userId, expiresAt: Date.now() + 5 * 60 * 1000 },
       ];
 
-      console.log("temp seats", tempSeats[scheduleId]);
       io.to(scheduleId).emit("update temp seats", tempSeats[scheduleId]);
     });
 
-    // Deselect seat
     socket.on("deselect seat", ({ scheduleId, seatId, userId }) => {
-      tempSeats[scheduleId] = (tempSeats[scheduleId] || []).filter(
-        (s) => !(s.seatId === seatId && s.userId === userId),
-      );
-      io.to(scheduleId).emit("update temp seats", tempSeats[scheduleId]);
-    });
-
-    // reset temp seat
-    socket.on("reset temp seats", ({ scheduleId, userId }) => {
-      tempSeats[scheduleId] = (tempSeats[scheduleId] || []).filter(
-        (s) => !(s.userId === userId),
-      );
+      tempSeats[scheduleId] =
+        tempSeats[scheduleId]?.filter(
+          (s) => !(s.seatId === seatId && s.userId === userId),
+        ) || [];
 
       io.to(scheduleId).emit("update temp seats", tempSeats[scheduleId]);
     });
 
     socket.on("disconnect", () => {
-      // socket.emit("update temp seats", []);
-
-      io.emit("update temp seats", tempSeats);
-      console.log("User disconnected");
+      console.log("❌ Socket disconnected:", socket.id);
     });
   });
 
+  /* ---------- CLEANUP ---------- */
   setInterval(async () => {
     const now = Date.now();
 
     for (const scheduleId in tempSeats) {
-      const before = tempSeats[scheduleId].length;
-
-      // filter out expired seats
       tempSeats[scheduleId] = tempSeats[scheduleId].filter(
         (s) => s.expiresAt > now,
       );
-      // 🔸 2. Remove seats that got booked in DB
-      const booked = await getBookedSeats(parseInt(scheduleId));
+
+      const booked = await getBookedSeats(+scheduleId);
       tempSeats[scheduleId] = tempSeats[scheduleId].filter(
         (s) => !booked.includes(s.seatId),
       );
-
-      // 🔸 3. Broadcast if list changed
-      if (tempSeats[scheduleId].length !== before) {
-        if (io.sockets.adapter.rooms.has(scheduleId)) {
-          console.log("temp seats updated", scheduleId, tempSeats[scheduleId]);
-          io.to(scheduleId).emit(
-            "update temp seats",
-            tempSeats[scheduleId] || [],
-          );
-          io.to(scheduleId).emit("booked seats", booked);
-        }
-      }
     }
   }, 5000);
 
-  // Start server
-
+  /* ---------- START ---------- */
   const PORT = process.env.PORT || 3000;
   server.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
+    console.log(`🚀 Server running on port ${PORT}`);
     updateMovieStatus();
   });
 };
 
-if (process.env.NODE_ENV !== "production") {
-  startServer();
-}
+startServer();
