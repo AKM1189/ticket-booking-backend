@@ -7,7 +7,6 @@ import { sendEmail } from "../utils/sendEmail";
 import { LoginType, Role } from "../types/AuthType";
 
 dotenv.config();
-console.log("JWT_SECRET:", process.env.JWT_SECRET);
 export class AuthService {
   private userRepo = AppDataSource.getRepository(User);
 

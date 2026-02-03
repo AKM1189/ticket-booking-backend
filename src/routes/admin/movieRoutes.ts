@@ -13,7 +13,6 @@ import { CreateMovieDto } from "../../dtos/movie.dto";
 import multer from "multer";
 import fs from "fs";
 import { accessAsAdmin, protect } from "../../middlewares/auth.middleware";
-import { imgUpload } from "../../middlewares/imgUpload";
 
 const router = express.Router();
 
@@ -38,20 +37,20 @@ router.get("/movies/:id", getMovieById);
 router.post(
   "/movies",
   accessAsAdmin,
-  imgUpload.fields([
-    { name: "poster", maxCount: 1 },
-    { name: "photos[]", maxCount: 5 },
-  ]),
+  // upload.fields([
+  //   { name: "poster", maxCount: 1 },
+  //   { name: "photos[]", maxCount: 5 },
+  // ]),
   validateDto(CreateMovieDto),
   addMovie,
 );
 router.put(
   "/movies/:id",
   accessAsAdmin,
-  imgUpload.fields([
-    { name: "poster", maxCount: 1 },
-    { name: "photos[]", maxCount: 5 },
-  ]),
+  // upload.fields([
+  //   { name: "poster", maxCount: 1 },
+  //   { name: "photos[]", maxCount: 5 },
+  // ]),
   validateDto(CreateMovieDto),
   updateMovie,
 );

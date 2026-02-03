@@ -3,7 +3,6 @@ import { AppDataSource } from "../../data-source";
 import { Genre } from "../../entity/Genre";
 import { Movie } from "../../entity/Movie";
 import { MovieStatus, MovieType } from "../../types/MovieType";
-import { uploadImagesToServer } from "../../utils/imageUploads";
 import { Cast } from "../../entity/Cast";
 import { CastType } from "../../types/CastType";
 import { Image } from "../../entity/Image";
@@ -14,19 +13,30 @@ import { GenreType } from "../../types/GenreType";
 import { addNotification } from "../../utils/addNoti";
 import { NOTI_TYPE } from "../../constants";
 import { User } from "../../entity/User";
+import { deleteFromR2 } from "../../config/r2-upload";
+import { Express } from "express";
+import { ImageService } from "../image.service/image.service";
+
+type FilesType =
+  | Express.Multer.File[]
+  | {
+      [fieldname: string]: Express.Multer.File[];
+    };
 
 export class MovieService {
   private movieRepo = AppDataSource.getRepository(Movie);
   private genreRepo = AppDataSource.getRepository(Genre);
   private castRepo = AppDataSource.getRepository(Cast);
   private imageRepo = AppDataSource.getRepository(Image);
+  private imageService = new ImageService();
+  // constructor(private imageService: ImageService) {}
 
-  async addMovie(
-    body: MovieType,
-    posterUrl: string,
-    photoUrls: string[],
-    user: User,
-  ) {
+  async addMovie(body: MovieType, files: FilesType, user: User) {
+    const imageFiles = files as {
+      poster?: Express.Multer.File[];
+      "photos[]": Express.Multer.File[];
+    };
+
     const {
       title,
       description,
@@ -55,6 +65,15 @@ export class MovieService {
     await this.genreRepo.save(genreEntities);
     const castEntities =
       casts && casts.length ? await this.castRepo.findByIds(casts) : [];
+
+    const posterUrl = await this.imageService.uploadOne(
+      imageFiles.poster[0],
+      "movies",
+    );
+    const photoUrls = await this.imageService.uploadMany(
+      imageFiles["photos[]"],
+      "movies",
+    );
 
     const posterImage = await this.imageRepo.save({ url: posterUrl });
     const photoImages = await Promise.all(
@@ -109,16 +128,18 @@ export class MovieService {
     photoUrls: string[],
     user: User,
   ) {
-    const existingMovie = await this.movieRepo.findOne({
+    let posterImage: Image;
+    let photoImages: Image[];
+    const movie = await this.movieRepo.findOne({
       where: { id: movieId },
       relations: ["genres"],
     });
-    if (!existingMovie) {
+    if (!movie) {
       throw new Error("Movie not found.");
     }
-    let genreEntities = existingMovie.genres;
+    let genreEntities = movie.genres;
     if (body.genres && body.genres.length > 0) {
-      const existingGenreIds = existingMovie.genres.map((g) => g.id);
+      const existingGenreIds = movie.genres.map((g) => g.id);
       const bodyGenreIds = body.genres.map(Number);
       genreEntities = (await this.genreRepo.findBy({
         id: In(body.genres),
@@ -126,43 +147,47 @@ export class MovieService {
       const newGenres = genreEntities.filter(
         (genre) => !existingGenreIds.includes(genre.id),
       );
-      const removedGenres = existingMovie.genres.filter(
+      const removedGenres = movie.genres.filter(
         (genre) => !bodyGenreIds.includes(genre.id),
       );
-      console.log("new genres", newGenres);
-      console.log("removed genres", removedGenres);
 
       if (newGenres.length || removedGenres.length) {
         await this.processGenreMovieCount(newGenres, removedGenres);
       }
     }
 
-    let castEntities = existingMovie.casts;
+    let castEntities = movie.casts;
     if (body.casts && body.casts.length > 0) {
       castEntities = (await this.castRepo.findBy({
         id: In(body.casts),
       })) as Cast[];
     }
 
-    const posterImage =
-      posterUrl && (await this.imageRepo.save({ url: posterUrl }));
-    const photoImages =
-      photoUrls?.length > 0 &&
-      (await Promise.all(
+    if (posterUrl) {
+      deleteFromR2(movie.poster.url);
+      posterImage = await this.imageRepo.save({ url: posterUrl });
+      await this.imageRepo.delete(movie.poster.id);
+    }
+
+    if (photoUrls && photoUrls.length > 0) {
+      movie.photos.map(async (item) => {
+        await deleteFromR2(item.url);
+        await this.imageRepo.delete(item.id);
+      });
+      photoImages = await Promise.all(
         photoUrls.map((url) =>
           this.imageRepo.save({
             url,
           }),
         ),
-      ));
+      );
+    }
 
     const updatedMovie = {
-      ...existingMovie,
+      ...movie,
       ...body,
       poster: posterImage,
       photos: photoImages,
-      // ...(posterImage ? { poster: posterImage } : {}),
-      // ...(photoImages.length > 0 ? { photos: photoImages } : {}),
       genres: genreEntities,
       updatedAt: new Date(),
       casts: castEntities,
@@ -170,43 +195,43 @@ export class MovieService {
 
     await this.movieRepo.save(updatedMovie);
 
-    // DELETE OLD POSTER FILE IF NEW ONE IS UPLOADED
-    if (posterUrl && existingMovie.poster?.url) {
-      const oldPosterPath = path.join(
-        __dirname,
-        "..",
-        "uploads",
-        path.basename(existingMovie.poster.url),
-      );
-      try {
-        await fs.unlink(oldPosterPath);
-        console.log("Old poster deleted");
-      } catch (err) {
-        console.warn("Failed to delete old poster:", err);
-      }
-      await this.imageRepo.delete(existingMovie.poster.id);
-    }
+    // // DELETE OLD POSTER FILE IF NEW ONE IS UPLOADED
+    // if (posterUrl && movie.poster?.url) {
+    //   const oldPosterPath = path.join(
+    //     __dirname,
+    //     "..",
+    //     "uploads",
+    //     path.basename(movie.poster.url),
+    //   );
+    //   try {
+    //     await fs.unlink(oldPosterPath);
+    //     console.log("Old poster deleted");
+    //   } catch (err) {
+    //     console.warn("Failed to delete old poster:", err);
+    //   }
+    //   await this.imageRepo.delete(movie.poster.id);
+    // }
 
-    // DELETE OLD GALLERY IMAGES IF NEW ONES ARE UPLOADED
-    if (photoUrls.length > 0 && existingMovie.photos?.length) {
-      for (const img of existingMovie.photos) {
-        const oldPath = path.join(
-          __dirname,
-          "..",
-          "uploads",
-          path.basename(img.url),
-        );
-        try {
-          await fs.unlink(oldPath);
-        } catch (err) {
-          console.warn("Failed to delete photo image:", err);
-        }
+    // // DELETE OLD GALLERY IMAGES IF NEW ONES ARE UPLOADED
+    // if (photoUrls.length > 0 && movie.photos?.length) {
+    //   for (const img of movie.photos) {
+    //     const oldPath = path.join(
+    //       __dirname,
+    //       "..",
+    //       "uploads",
+    //       path.basename(img.url),
+    //     );
+    //     try {
+    //       await fs.unlink(oldPath);
+    //     } catch (err) {
+    //       console.warn("Failed to delete photo image:", err);
+    //     }
 
-        await this.imageRepo.delete(img.id);
-      }
-    }
+    //     await this.imageRepo.delete(img.id);
+    //   }
+    // }
 
-    const message = `${user.name} updated Movie ${existingMovie.title} details.`;
+    const message = `${user.name} updated Movie ${movie.title} details.`;
     addNotification(NOTI_TYPE.MOVIE_UPDATED, "Movie Updated", message, user.id);
 
     return {
@@ -233,41 +258,49 @@ export class MovieService {
     await this.processGenreMovieCount([], existingMovie.genres);
     await this.movieRepo.remove(existingMovie);
 
+    await deleteFromR2(existingMovie.poster.url);
+    await this.imageRepo.delete(existingMovie.poster.id);
+
+    existingMovie.photos.map(async (item) => {
+      await deleteFromR2(item.url);
+      await this.imageRepo.delete(item.id);
+    });
+
     // DELETE OLD POSTER FILE IF NEW ONE IS UPLOADED
-    if (existingMovie.poster?.url) {
-      const oldPosterPath = path.join(
-        __dirname,
-        "..",
-        "uploads",
-        path.basename(existingMovie.poster.url),
-      );
-      try {
-        await fs.unlink(oldPosterPath);
-        console.log("Old poster deleted");
-      } catch (err) {
-        console.warn("Failed to delete old poster:", err);
-      }
-      await this.imageRepo.delete(existingMovie.poster.id);
-    }
+    // if (existingMovie.poster?.url) {
+    //   const oldPosterPath = path.join(
+    //     __dirname,
+    //     "..",
+    //     "uploads",
+    //     path.basename(existingMovie.poster.url),
+    //   );
+    //   try {
+    //     await fs.unlink(oldPosterPath);
+    //     console.log("Old poster deleted");
+    //   } catch (err) {
+    //     console.warn("Failed to delete old poster:", err);
+    //   }
+    //   await this.imageRepo.delete(existingMovie.poster.id);
+    // }
 
     // DELETE OLD GALLERY IMAGES IF NEW ONES ARE UPLOADED
-    if (existingMovie.photos?.length) {
-      for (const img of existingMovie.photos) {
-        const oldPath = path.join(
-          __dirname,
-          "..",
-          "uploads",
-          path.basename(img.url),
-        );
-        try {
-          await fs.unlink(oldPath);
-        } catch (err) {
-          console.warn("Failed to delete photo image:", err);
-        }
+    // if (existingMovie.photos?.length) {
+    //   for (const img of existingMovie.photos) {
+    //     const oldPath = path.join(
+    //       __dirname,
+    //       "..",
+    //       "uploads",
+    //       path.basename(img.url),
+    //     );
+    //     try {
+    //       await fs.unlink(oldPath);
+    //     } catch (err) {
+    //       console.warn("Failed to delete photo image:", err);
+    //     }
 
-        await this.imageRepo.delete(img.id);
-      }
-    }
+    //     await this.imageRepo.delete(img.id);
+    //   }
+    // }
 
     const message = `${user.name} deleted Movie ${existingMovie.title} from the system.`;
     addNotification(NOTI_TYPE.MOVIE_DELETED, "Movie Deleted", message, user.id);

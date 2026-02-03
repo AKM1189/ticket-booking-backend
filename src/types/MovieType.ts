@@ -1,4 +1,3 @@
-import { MulterFile } from "./multer";
 import { ScheduleType } from "./ScheduleType";
 
 export type MovieType = {
@@ -9,9 +8,9 @@ export type MovieType = {
   subtitle: string[];
   releaseDate: Date;
   status: string;
-  poster: MulterFile;
+  poster: File;
   trailerId: string;
-  photos: MulterFile[];
+  photos: File[];
   experience: string[];
   genres: number[];
   casts: number[];

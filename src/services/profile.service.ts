@@ -1,3 +1,4 @@
+import { deleteFromR2 } from "../config/r2-upload";
 import { AppDataSource } from "../data-source";
 import { Image } from "../entity/Image";
 import { User } from "../entity/User";
@@ -23,6 +24,7 @@ export class ProfileService {
     user.email = email;
     user.phoneNo = phoneNo;
     if (imageUrl) {
+      deleteFromR2(user.image.url)
       const profileImage = await this.imageRepo.save({ url: imageUrl });
       user.image = profileImage;
     }

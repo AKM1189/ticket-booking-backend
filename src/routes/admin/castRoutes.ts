@@ -12,7 +12,6 @@ import {
 import { CreateCastDto } from "../../dtos/cast.dto";
 import multer from "multer";
 import fs from "fs";
-import { imgUpload } from "../../middlewares/imgUpload";
 
 const router = express.Router();
 
@@ -34,14 +33,20 @@ router.get("/casts/:id", getCastById);
 router.post(
   "/casts",
   accessAsAdmin,
-  imgUpload.fields([{ name: "image", maxCount: 1 }]),
+  // imgUpload.fields([{ name: "image", maxCount: 1 }]),
+  // upload.fields([
+  //   { name: "image", maxCount: 1 },
+  // ]),
   validateDto(CreateCastDto),
   addCast,
 );
 router.put(
   "/casts/:id",
   accessAsAdmin,
-  imgUpload.fields([{ name: "image", maxCount: 1 }]),
+  // imgUpload.fields([{ name: "image", maxCount: 1 }]),
+  // upload.fields([
+  //   { name: "image", maxCount: 1 },
+  // ]),
   validateDto(CreateCastDto),
   updateCast,
 );

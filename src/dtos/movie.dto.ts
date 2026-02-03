@@ -1,14 +1,7 @@
 import {
-  IsNotEmpty,
   IsArray,
   IsString,
-  Validate,
-  ValidatorConstraint,
-  ValidatorConstraintInterface,
-  ValidationArguments,
 } from "class-validator";
-import type { Express } from "express";
-import { MulterFile } from "../types/multer";
 
 // @ValidatorConstraint({ name: "isValidImageArray", async: false })
 // class IsValidImageArray implements ValidatorConstraintInterface {

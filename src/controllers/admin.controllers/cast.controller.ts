@@ -3,6 +3,7 @@ import { Request, Response } from "express";
 import { getQueryParams } from "../../utils/queryParams";
 import { Cast } from "../../entity/Cast";
 import { CastService } from "../../services/admin.service/cast.service";
+import { extractFileKeys } from "../../utils/extractImage";
 
 const castService = new CastService();
 
@@ -60,13 +61,16 @@ export const getCastById = async (req: Request, res: Response) => {
 };
 
 export const addCast = async (req: Request, res: Response) => {
-  const files = req.files as {
-    [fieldname: string]: Express.Multer.File[];
-  };
-  const castImg = files["image"]?.[0];
-  const castImgUrl = `${req.protocol}://${req.get("host")}/uploads/${
-    castImg.filename
-  }`;
+  // const files = req.files as {
+  //   [fieldname: string]: Express.Multer.File[];
+  // };
+  // const castImg = files["image"]?.[0];
+  // const castImgUrl = `${req.protocol}://${req.get("host")}/uploads/${
+  //   castImg.filename
+  // }`;
+  const {singleUrl: castImgUrl} = extractFileKeys(req.files as any, {
+    single: 'image'
+  })
   try {
     const { status, message, data } = await castService.addCast(
       req.body,
@@ -85,16 +89,16 @@ export const addCast = async (req: Request, res: Response) => {
 };
 
 export const updateCast = async (req: Request, res: Response) => {
-  const files = req.files as {
-    [fieldname: string]: Express.Multer.File[];
-  };
-  const castImg = files["image"]?.[0];
-  const castImgUrl =
-    castImg &&
-    `${req.protocol}://${req.get("host")}/uploads/${castImg.filename}`;
-  console.log("castImgUrl", files);
-
-  console.log("castImgUrl", castImgUrl);
+  // const files = req.files as {
+  //   [fieldname: string]: Express.Multer.File[];
+  // };
+  // const castImg = files["image"]?.[0];
+  // const castImgUrl =
+  //   castImg &&
+  //   `${req.protocol}://${req.get("host")}/uploads/${castImg.filename}`;
+    const {singleUrl: castImgUrl} = extractFileKeys(req.files as any, {
+    single: 'image'
+  })
 
   try {
     const castId = parseInt(req.params.id as string);

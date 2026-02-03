@@ -4,11 +4,13 @@ import { Movie } from "../../entity/Movie";
 import { MovieService } from "../../services/admin.service/movie.service";
 import { getQueryParams } from "../../utils/queryParams";
 import { Like } from "typeorm";
-import { MulterFileWithLocation } from "../../types/multer-s3-type";
 import dayjs from "dayjs";
 import { MovieStatus } from "../../types/MovieType";
 import { Role } from "../../types/AuthType";
-import { Theatre } from "../../entity/Theatre";
+import dotenv from "dotenv";
+import { extractFileKeys } from "../../utils/extractImage";
+import { uploadToR2 } from "../../config/r2-upload";
+dotenv.config();
 
 const movieService = new MovieService();
 export const getMovies = async (req: Request, res: Response) => {
@@ -85,7 +87,12 @@ export const getShowingMovies = async (req: Request, res: Response) => {
 
     const movieQuery = AppDataSource.getRepository(Movie)
       .createQueryBuilder("movie")
-      .innerJoin("movie.schedules", "schedule", "schedule.showDate = :today AND schedule.showTime >= :time OR schedule.showDate > :today", { today, time })
+      .innerJoin(
+        "movie.schedules",
+        "schedule",
+        "schedule.showDate = :today AND schedule.showTime >= :time OR schedule.showDate > :today",
+        { today, time },
+      )
       .leftJoinAndSelect("movie.genres", "genres")
       .leftJoinAndSelect("movie.casts", "casts")
       .leftJoinAndSelect("movie.poster", "poster")
@@ -96,10 +103,13 @@ export const getShowingMovies = async (req: Request, res: Response) => {
       });
 
     if (user?.role === Role.staff) {
-      movieQuery
-        .innerJoin("schedule.theatre", "theatre", "theatre.id = :theatreId", { theatreId: user.theatre.id });
+      movieQuery.innerJoin(
+        "schedule.theatre",
+        "theatre",
+        "theatre.id = :theatreId",
+        { theatreId: user.theatre.id },
+      );
     }
-
 
     const movies = await movieQuery.getMany();
 
@@ -112,25 +122,36 @@ export const getShowingMovies = async (req: Request, res: Response) => {
 };
 
 export const addMovie = async (req: Request, res: Response) => {
-  const files = req.files as {
-    [fieldname: string]: Express.Multer.File[];
-  };
-  const poster = files["poster"]?.[0];
-  const photos = files["photos[]"] || [];
+  //  const files = req.files as {
+  //     poster?: Express.Multer.File[];
+  //     "photos[]": Express.Multer.File[];
+  //   };
 
-  const posterUrl = `${req.protocol}://${req.get("host")}/uploads/${poster.filename
-    }`;
-  const photoUrls = photos.map((file) => {
-    return `${req.protocol}://${req.get("host")}/uploads/${file.filename}`;
-  });
+  //   const posterKey = `movies/${Date.now()}-${files.poster[0].originalname}`;
+  //   await uploadToR2(files.poster[0], posterKey);
+  //  const photoKeys = await Promise.all(
+  //       files["photos[]"].map((file) => {
+  //         const key = `movies/${Date.now()}-${file.originalname}`;
+  //         return uploadToR2(file, key);
+  //       })
+  //     );
+  //   const posterUrl = files.poster?.[0]?.key ?? null;
+
+  //   const photoUrls = files["photos[]"]
+  //     ? files["photos[]"].map((f) => f.key!)
+  //     : [];
+
+  // const {singleUrl, multipleUrls} = extractFileKeys(req.files as any, {
+  //   single: "poster",
+  //   multiple: "photos[]"
+  // })
 
   const user = req.user;
 
   try {
     const { status, message, data } = await movieService.addMovie(
       req.body,
-      posterUrl,
-      photoUrls,
+      req.files,
       user,
     );
 
@@ -168,22 +189,16 @@ export const updateMovie = async (req: Request, res: Response) => {
       res.status(400).json({ message: "Invalid or missing movie ID" });
     }
 
-    const files = req.files as {
-      [fieldname: string]: Express.Multer.File[];
-    };
-    const poster = files["poster"]?.[0] || null;
-    const photos = files["photos[]"] || [];
-    const posterUrl = `${req.protocol}://${req.get("host")}/uploads/${poster.filename
-      }`;
-    const photoUrls = photos.map((file) => {
-      return `${req.protocol}://${req.get("host")}/uploads/${file.filename}`;
+    const { singleUrl, multipleUrls } = extractFileKeys(req.files as any, {
+      single: "poster",
+      multiple: "photos[]",
     });
 
     const { status, message } = await movieService.updateMovie(
       movieId,
       req.body,
-      posterUrl,
-      photoUrls,
+      singleUrl,
+      multipleUrls,
       user,
     );
     res.status(201).json({

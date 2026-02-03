@@ -2,7 +2,6 @@ import express from "express";
 
 import fs from "fs";
 import { accessAsAdmin, protect } from "../../middlewares/auth.middleware";
-import { imgUpload } from "../../middlewares/imgUpload";
 import {
   changePassword,
   updateProfile,
@@ -18,7 +17,7 @@ const router = express.Router();
 router.put(
   "/profile/update/:id",
   protect,
-  imgUpload.fields([{ name: "image", maxCount: 1 }]),
+  // upload.fields([{ name: "image", maxCount: 1 }]),
   updateProfile,
 );
 

@@ -7,6 +7,7 @@ import { promises as fs } from "fs";
 import { Movie } from "../../entity/Movie";
 import { String } from "aws-sdk/clients/cloudsearch";
 import { Like } from "typeorm";
+import { deleteFromR2 } from "../../config/r2-upload";
 
 export class CastService {
   private castRepo = AppDataSource.getRepository(Cast);
@@ -86,7 +87,10 @@ export class CastService {
   async updateCast(castId: number, body: CastType, castImgUrl: string) {
     const { name, role } = body;
 
-    const existingCastById = await this.castRepo.findOneBy({ id: castId });
+    const existingCastById = await this.castRepo.findOne({
+      where: { id: castId },
+      relations: ['image']
+    });
     if (!existingCastById) {
       return {
         status: 404,
@@ -106,12 +110,18 @@ export class CastService {
     if (castImgUrl) {
       const castImage = await this.imageRepo.save({ url: castImgUrl });
 
-      const updatedCast = {
+       const updatedCast = {
         ...existingCastById,
         ...body,
         image: castImage,
       };
       await this.castRepo.save(updatedCast);
+
+       deleteFromR2(existingCastById.image.url)
+      await this.imageRepo.delete(existingCastById.image.id);
+
+
+     
     } else {
       const updatedCast = {
         ...existingCastById,
@@ -120,22 +130,22 @@ export class CastService {
       await this.castRepo.save(updatedCast);
     }
 
-    // delete img from uploads folder and img table
-    if (castImgUrl && existingCastById.image?.url) {
-      const oldPosterPath = path.join(
-        __dirname,
-        "..",
-        "uploads",
-        path.basename(existingCastById.image.url),
-      );
-      try {
-        await fs.unlink(oldPosterPath);
-        console.log("Old cast image deleted");
-      } catch (err) {
-        console.warn("Failed to delete old cast image:", err);
-      }
-      await this.imageRepo.delete(existingCastById.image.id);
-    }
+    // // delete img from uploads folder and img table
+    // if (castImgUrl && existingCastById.image?.url) {
+    //   const oldPosterPath = path.join(
+    //     __dirname,
+    //     "..",
+    //     "uploads",
+    //     path.basename(existingCastById.image.url),
+    //   );
+    //   try {
+    //     await fs.unlink(oldPosterPath);
+    //     console.log("Old cast image deleted");
+    //   } catch (err) {
+    //     console.warn("Failed to delete old cast image:", err);
+    //   }
+    //   await this.imageRepo.delete(existingCastById.image.id);
+    // }
 
     return {
       status: 200,
@@ -144,7 +154,10 @@ export class CastService {
   }
 
   async deleteCast(castId: number) {
-    const cast = await this.castRepo.findOneBy({ id: castId });
+    const cast = await this.castRepo.findOne({
+      where: { id: castId },
+      relations: ['image']
+    });
 
     if (!cast) {
       return {
@@ -168,6 +181,8 @@ export class CastService {
     }
 
     await this.castRepo.remove(cast);
+
+     deleteFromR2(cast.image.url)
 
     if (cast.image?.url) {
       const oldPosterPath = path.join(

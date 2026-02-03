@@ -48,6 +48,8 @@ export const createApp = async () => {
   console.log("DB initialized!");
 
   const app = express();
+  app.set("trust proxy", true);
+
 
   // Middlewares
   const allowedOrigins =
