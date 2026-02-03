@@ -1,6 +1,6 @@
 import { Readable } from "stream";
 import cloudinary from "../config/cloudinary";
-import { v4 as uuid } from "uuid";
+import { randomUUID } from "crypto";
 
 // export function uploadImage(file: Express.Multer.File): Promise<string> {
 //   const publicId = `movies/${uuid()}`;
@@ -25,7 +25,7 @@ import { v4 as uuid } from "uuid";
 export async function uploadImage(file: Express.Multer.File): Promise<string> {
   if (!file?.buffer) throw new Error("No file provided");
 
-  const publicId = `movies/${uuid()}`;
+  const publicId = `movies/${randomUUID()}`;
 
   // Convert buffer to base64 Data URI
   const dataUri = `data:${file.mimetype};base64,${file.buffer.toString("base64")}`;
