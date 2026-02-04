@@ -100,68 +100,68 @@ const startServer = async () => {
 
   /* ---------- SOCKET ---------- */
   const server = createServer(app);
-  // const io = new Server(server, {
-  //   cors: { origin: "*" },
-  // });
+  const io = new Server(server, {
+    cors: { origin: "*" },
+  });
 
-  // const tempSeats: Record<string, TempSeat[]> = {};
+  const tempSeats: Record<string, TempSeat[]> = {};
 
-  // io.on("connection", (socket) => {
-  //   console.log("🔗 Socket connected:", socket.id);
+  io.on("connection", (socket) => {
+    console.log("🔗 Socket connected:", socket.id);
 
-  //   socket.on("join schedule", async (scheduleId: string) => {
-  //     socket.join(scheduleId);
+    socket.on("join schedule", async (scheduleId: string) => {
+      socket.join(scheduleId);
 
-  //     const booked = await getBookedSeats(+scheduleId);
-  //     socket.emit("booked seats", booked);
-  //     socket.emit("update temp seats", tempSeats[scheduleId] || []);
-  //   });
+      const booked = await getBookedSeats(+scheduleId);
+      socket.emit("booked seats", booked);
+      socket.emit("update temp seats", tempSeats[scheduleId] || []);
+    });
 
-  //   socket.on("select seat", async ({ scheduleId, seatId, userId }) => {
-  //     const booked = await getBookedSeats(+scheduleId);
-  //     const temp = tempSeats[scheduleId] || [];
+    socket.on("select seat", async ({ scheduleId, seatId, userId }) => {
+      const booked = await getBookedSeats(+scheduleId);
+      const temp = tempSeats[scheduleId] || [];
 
-  //     if (booked.includes(seatId) || temp.some((s) => s.seatId === seatId)) {
-  //       return;
-  //     }
+      if (booked.includes(seatId) || temp.some((s) => s.seatId === seatId)) {
+        return;
+      }
 
-  //     tempSeats[scheduleId] = [
-  //       ...temp,
-  //       { seatId, userId, expiresAt: Date.now() + 5 * 60 * 1000 },
-  //     ];
+      tempSeats[scheduleId] = [
+        ...temp,
+        { seatId, userId, expiresAt: Date.now() + 5 * 60 * 1000 },
+      ];
 
-  //     io.to(scheduleId).emit("update temp seats", tempSeats[scheduleId]);
-  //   });
+      io.to(scheduleId).emit("update temp seats", tempSeats[scheduleId]);
+    });
 
-  //   socket.on("deselect seat", ({ scheduleId, seatId, userId }) => {
-  //     tempSeats[scheduleId] =
-  //       tempSeats[scheduleId]?.filter(
-  //         (s) => !(s.seatId === seatId && s.userId === userId),
-  //       ) || [];
+    socket.on("deselect seat", ({ scheduleId, seatId, userId }) => {
+      tempSeats[scheduleId] =
+        tempSeats[scheduleId]?.filter(
+          (s) => !(s.seatId === seatId && s.userId === userId),
+        ) || [];
 
-  //     io.to(scheduleId).emit("update temp seats", tempSeats[scheduleId]);
-  //   });
+      io.to(scheduleId).emit("update temp seats", tempSeats[scheduleId]);
+    });
 
-  //   socket.on("disconnect", () => {
-  //     console.log("❌ Socket disconnected:", socket.id);
-  //   });
-  // });
+    socket.on("disconnect", () => {
+      console.log("❌ Socket disconnected:", socket.id);
+    });
+  });
 
-  // /* ---------- CLEANUP ---------- */
-  // setInterval(async () => {
-  //   const now = Date.now();
+  /* ---------- CLEANUP ---------- */
+  setInterval(async () => {
+    const now = Date.now();
 
-  //   for (const scheduleId in tempSeats) {
-  //     tempSeats[scheduleId] = tempSeats[scheduleId].filter(
-  //       (s) => s.expiresAt > now,
-  //     );
+    for (const scheduleId in tempSeats) {
+      tempSeats[scheduleId] = tempSeats[scheduleId].filter(
+        (s) => s.expiresAt > now,
+      );
 
-  //     const booked = await getBookedSeats(+scheduleId);
-  //     tempSeats[scheduleId] = tempSeats[scheduleId].filter(
-  //       (s) => !booked.includes(s.seatId),
-  //     );
-  //   }
-  // }, 5000);
+      const booked = await getBookedSeats(+scheduleId);
+      tempSeats[scheduleId] = tempSeats[scheduleId].filter(
+        (s) => !booked.includes(s.seatId),
+      );
+    }
+  }, 5000);
 
   /* ---------- START ---------- */
   const PORT = process.env.PORT || 3000;
