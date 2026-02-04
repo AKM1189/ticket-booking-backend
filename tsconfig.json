@@ -2,7 +2,7 @@
   "compilerOptions": {
     "lib": ["es2021", "DOM"],
     "module": "CommonJS", // Change from es2022
-    "target": "ES2021",
+    "target": "ES2022",
     "moduleResolution": "node", // Change from node
     "outDir": "./build",
     "rootDir": "./src", // Explicitly set your source root
