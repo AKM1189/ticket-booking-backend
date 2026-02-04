@@ -5,6 +5,6 @@ export class Image {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column()
+  @Column({ type: "varchar", length: 255 })
   url: string;
 }
