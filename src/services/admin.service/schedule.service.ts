@@ -95,6 +95,8 @@ export class ScheduleService {
         "screen",
         "seatTypes",
         "screen.seatTypes.seatType",
+        "movie.poster",
+        "movie.photos",
       ],
       order: {
         showDate: "DESC",

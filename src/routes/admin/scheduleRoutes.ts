@@ -2,7 +2,7 @@ import express from "express";
 import {
   addSchedule,
   deleteSchedule,
-  getSchedule,
+  getSchedules,
   getScheduleByShowDetail,
   getShowDate,
   getShowTime,
@@ -12,7 +12,7 @@ import { accessAsAdmin } from "../../middlewares/auth.middleware";
 
 const router = express.Router();
 
-router.get("/schedules", accessAsAdmin, getSchedule);
+router.get("/schedules", accessAsAdmin, getSchedules);
 router.get("/schedules/showDate", getShowDate);
 router.get("/schedules/showTime", getShowTime);
 router.get("/schedules/show-details", getScheduleByShowDetail);

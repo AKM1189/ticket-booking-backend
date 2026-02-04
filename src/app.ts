@@ -30,6 +30,7 @@ import userAboutRoutes from "./routes/user/aboutRoutes";
 import { updateMovieStatus } from "./utils/updateMovieStatus";
 import { getBookedSeats } from "./utils/getBookedSeats";
 import { initializeDB } from "./config/db";
+import { initSocket } from "./socket";
 
 dotenv.config();
 
@@ -100,9 +101,7 @@ const startServer = async () => {
 
   /* ---------- SOCKET ---------- */
   const server = createServer(app);
-  const io = new Server(server, {
-    cors: { origin: "*" },
-  });
+  const io = initSocket(server);
 
   const tempSeats: Record<string, TempSeat[]> = {};
 
@@ -120,7 +119,6 @@ const startServer = async () => {
     socket.on("select seat", async ({ scheduleId, seatId, userId }) => {
       const booked = await getBookedSeats(+scheduleId);
       const temp = tempSeats[scheduleId] || [];
-
       if (booked.includes(seatId) || temp.some((s) => s.seatId === seatId)) {
         return;
       }

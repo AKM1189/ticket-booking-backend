@@ -1,5 +1,7 @@
 import { Movie } from "../../entity/Movie";
 import { getPublicUrl } from "../../middlewares/cloudinaryUpload";
+import { formatCasts } from "./cast.formatter";
+import { formatUser } from "./user.formatter";
 
 export const formatMovie = (movie: Movie) => {
   if (!movie) return movie;
@@ -31,4 +33,16 @@ export const formatMovie = (movie: Movie) => {
 
 export const formatMovies = (movies: Movie[]) => {
   return movies.map(formatMovie);
+};
+
+export const formatMovieDetail = (movie: Movie) => {
+  const formattedMovie = formatMovie(movie);
+  return {
+    ...formattedMovie,
+    casts: formatCasts(formattedMovie.casts),
+    reviews: formattedMovie.reviews.map((review) => ({
+      ...review,
+      user: formatUser(review.user),
+    })),
+  };
 };

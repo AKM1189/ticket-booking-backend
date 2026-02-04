@@ -4,7 +4,7 @@ import { getQueryParams } from "../../utils/queryParams";
 
 const scheduleService = new ScheduleService();
 
-export const getSchedule = async (req: Request, res: Response) => {
+export const getSchedules = async (req: Request, res: Response) => {
   try {
     const user = req.user;
     const { page, limit, sortBy, sortOrder, search } = getQueryParams(
@@ -41,14 +41,6 @@ export const getScheduleByShowDetail = async (req: Request, res: Response) => {
     const screenId = req.query.screenId as string;
     const showDate = req.query.showDate as string;
     const showTime = req.query.showTime as string;
-    console.log(
-      "show detail",
-      movieId,
-      theatreId,
-      screenId,
-      showDate,
-      showTime,
-    );
     const { status, data } = await scheduleService.getScheduleByShowDetail(
       movieId,
       theatreId,

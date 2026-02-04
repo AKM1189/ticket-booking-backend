@@ -2,6 +2,13 @@ import { MovieService } from "../../services/user.service/movie.service";
 import { MovieStatus } from "../../types/MovieType";
 import { getQueryParams } from "../../utils/queryParams";
 import { Request, Response } from "express";
+import {
+  formatMovie,
+  formatMovieDetail,
+  formatMovies,
+} from "../../utils/response-formatter/movie.formatter";
+import { formatCasts } from "../../utils/response-formatter/cast.formatter";
+import { formatUser } from "../../utils/response-formatter/user.formatter";
 
 const movieService = new MovieService();
 
@@ -33,7 +40,7 @@ export const getAllMovies = async (req: Request, res: Response) => {
     );
 
     res.status(status).json({
-      data,
+      data: formatMovies(data),
       pagination: {
         total,
         totalPages: Math.max(1, total / limit),
@@ -59,7 +66,7 @@ export const getSearchMovies = async (req: Request, res: Response) => {
     );
 
     res.status(status).json({
-      data,
+      data: formatMovies(data),
     });
   } catch (err) {
     res.status(500).json({ message: err.message });
@@ -71,9 +78,8 @@ export const getMovieDetail = async (req: Request, res: Response) => {
     const movieId = parseInt(req.params.id as string);
 
     const { data, status } = await movieService.getMovieDetail(movieId);
-
     res.status(status).json({
-      data,
+      data: formatMovieDetail(data),
     });
   } catch (err) {
     res.status(500).json({ message: err.message });

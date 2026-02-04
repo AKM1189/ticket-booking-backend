@@ -7,6 +7,7 @@ import { ScheduleStatus } from "../../types/ScheduleType";
 import { Schedule } from "../../entity/Schedule";
 import { setReleaseDate } from "../../utils/formatMovie";
 import { Genre } from "../../entity/Genre";
+import { formatMovies } from "../../utils/response-formatter/movie.formatter";
 
 export class MovieService {
   private movieRepo = AppDataSource.getRepository(Movie);
@@ -312,7 +313,7 @@ export class MovieService {
     return {
       status: 200,
       data: {
-        movies,
+        movies: formatMovies(movies),
         theatres,
         showDates: formattedShowDates,
       },

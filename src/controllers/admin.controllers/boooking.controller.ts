@@ -4,6 +4,7 @@ import { Request, Response } from "express";
 import { getQueryParams } from "../../utils/queryParams";
 import { Genre } from "../../entity/Genre";
 import { BookingService } from "../../services/admin.service/booking.service";
+import { formatBookings } from "../../utils/response-formatter/booking.formatter";
 
 const bookingService = new BookingService();
 

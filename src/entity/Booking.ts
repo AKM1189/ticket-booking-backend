@@ -22,7 +22,7 @@ export class Booking {
   @Column("simple-array")
   seatList: string[];
 
-  @Column("decimal", { precision: 5, scale: 2, default: 1.0 })
+  @Column("decimal", { precision: 10, scale: 2, default: 1.0 })
   totalAmount: string;
 
   @Column()
