@@ -87,27 +87,32 @@ const seatTypeSeeds: SeedSeatType[] = [
 const genreSeeds = [
   {
     name: "Action",
-    description: "High-energy stories built around momentum, set pieces, and conflict.",
+    description:
+      "High-energy stories built around momentum, set pieces, and conflict.",
     color: "#E11D48",
   },
   {
     name: "Adventure",
-    description: "Large-scale journeys with discovery, danger, and world-building.",
+    description:
+      "Large-scale journeys with discovery, danger, and world-building.",
     color: "#F97316",
   },
   {
     name: "Sci-Fi",
-    description: "Speculative stories shaped by technology, science, or imagined futures.",
+    description:
+      "Speculative stories shaped by technology, science, or imagined futures.",
     color: "#2563EB",
   },
   {
     name: "Thriller",
-    description: "Tense narratives driven by pressure, mystery, and escalating stakes.",
+    description:
+      "Tense narratives driven by pressure, mystery, and escalating stakes.",
     color: "#7C3AED",
   },
   {
     name: "Drama",
-    description: "Character-led stories focused on emotional change and consequence.",
+    description:
+      "Character-led stories focused on emotional change and consequence.",
     color: "#0F766E",
   },
   {
@@ -117,7 +122,8 @@ const genreSeeds = [
   },
   {
     name: "Mystery",
-    description: "Puzzle-driven stories where clues gradually reveal the truth.",
+    description:
+      "Puzzle-driven stories where clues gradually reveal the truth.",
     color: "#475569",
   },
   {
@@ -127,35 +133,172 @@ const genreSeeds = [
   },
   {
     name: "Animation",
-    description: "Stylized stories created through animated performance and visual craft.",
+    description:
+      "Stylized stories created through animated performance and visual craft.",
     color: "#F59E0B",
   },
   {
     name: "Family",
-    description: "Accessible stories designed for mixed-age audiences and shared viewing.",
+    description:
+      "Accessible stories designed for mixed-age audiences and shared viewing.",
     color: "#16A34A",
   },
 ];
 
 const castSeeds: SeedCast[] = [
-  { name: "Ava Hart", role: "Actor", imageUrl: buildImageUrl("Ava Hart", "Cast", "334155", "F8FAFC", 600, 600) },
-  { name: "Leo Quinn", role: "Actor", imageUrl: buildImageUrl("Leo Quinn", "Cast", "1D4ED8", "F8FAFC", 600, 600) },
-  { name: "Maya Lin", role: "Actor", imageUrl: buildImageUrl("Maya Lin", "Cast", "BE123C", "FFF7ED", 600, 600) },
-  { name: "Noah Vale", role: "Actor", imageUrl: buildImageUrl("Noah Vale", "Cast", "0F766E", "F0FDFA", 600, 600) },
-  { name: "Zara Chen", role: "Actor", imageUrl: buildImageUrl("Zara Chen", "Cast", "7C3AED", "FAF5FF", 600, 600) },
-  { name: "Ethan Blake", role: "Actor", imageUrl: buildImageUrl("Ethan Blake", "Cast", "C2410C", "FFF7ED", 600, 600) },
-  { name: "Sofia Noor", role: "Actor", imageUrl: buildImageUrl("Sofia Noor", "Cast", "0369A1", "F0F9FF", 600, 600) },
-  { name: "Daniel Cross", role: "Actor", imageUrl: buildImageUrl("Daniel Cross", "Cast", "4338CA", "EEF2FF", 600, 600) },
-  { name: "Hana Myint", role: "Actor", imageUrl: buildImageUrl("Hana Myint", "Cast", "EA580C", "FFFBEB", 600, 600) },
-  { name: "Aria Stone", role: "Actor", imageUrl: buildImageUrl("Aria Stone", "Cast", "C026D3", "FDF4FF", 600, 600) },
-  { name: "Kieran Holt", role: "Actor", imageUrl: buildImageUrl("Kieran Holt", "Cast", "15803D", "F0FDF4", 600, 600) },
-  { name: "Mei Sato", role: "Actor", imageUrl: buildImageUrl("Mei Sato", "Cast", "A21CAF", "FDF4FF", 600, 600) },
-  { name: "Lucas Ray", role: "Director", imageUrl: buildImageUrl("Lucas Ray", "Director", "111827", "F9FAFB", 600, 600) },
-  { name: "Elena Park", role: "Director", imageUrl: buildImageUrl("Elena Park", "Director", "1E293B", "F8FAFC", 600, 600) },
-  { name: "Theo Bennett", role: "Director", imageUrl: buildImageUrl("Theo Bennett", "Director", "3F3F46", "FAFAFA", 600, 600) },
-  { name: "Nadia Karim", role: "Director", imageUrl: buildImageUrl("Nadia Karim", "Director", "581C87", "FAF5FF", 600, 600) },
-  { name: "Min Thant", role: "Director", imageUrl: buildImageUrl("Min Thant", "Director", "0F172A", "E2E8F0", 600, 600) },
-  { name: "Olivia Frost", role: "Director", imageUrl: buildImageUrl("Olivia Frost", "Director", "134E4A", "F0FDFA", 600, 600) },
+  {
+    name: "Ava Hart",
+    role: "Actor",
+    imageUrl: buildImageUrl("Ava Hart", "Cast", "334155", "F8FAFC", 600, 600),
+  },
+  {
+    name: "Leo Quinn",
+    role: "Actor",
+    imageUrl: buildImageUrl("Leo Quinn", "Cast", "1D4ED8", "F8FAFC", 600, 600),
+  },
+  {
+    name: "Maya Lin",
+    role: "Actor",
+    imageUrl: buildImageUrl("Maya Lin", "Cast", "BE123C", "FFF7ED", 600, 600),
+  },
+  {
+    name: "Noah Vale",
+    role: "Actor",
+    imageUrl: buildImageUrl("Noah Vale", "Cast", "0F766E", "F0FDFA", 600, 600),
+  },
+  {
+    name: "Zara Chen",
+    role: "Actor",
+    imageUrl: buildImageUrl("Zara Chen", "Cast", "7C3AED", "FAF5FF", 600, 600),
+  },
+  {
+    name: "Ethan Blake",
+    role: "Actor",
+    imageUrl: buildImageUrl(
+      "Ethan Blake",
+      "Cast",
+      "C2410C",
+      "FFF7ED",
+      600,
+      600,
+    ),
+  },
+  {
+    name: "Sofia Noor",
+    role: "Actor",
+    imageUrl: buildImageUrl("Sofia Noor", "Cast", "0369A1", "F0F9FF", 600, 600),
+  },
+  {
+    name: "Daniel Cross",
+    role: "Actor",
+    imageUrl: buildImageUrl(
+      "Daniel Cross",
+      "Cast",
+      "4338CA",
+      "EEF2FF",
+      600,
+      600,
+    ),
+  },
+  {
+    name: "Hana Myint",
+    role: "Actor",
+    imageUrl: buildImageUrl("Hana Myint", "Cast", "EA580C", "FFFBEB", 600, 600),
+  },
+  {
+    name: "Aria Stone",
+    role: "Actor",
+    imageUrl: buildImageUrl("Aria Stone", "Cast", "C026D3", "FDF4FF", 600, 600),
+  },
+  {
+    name: "Kieran Holt",
+    role: "Actor",
+    imageUrl: buildImageUrl(
+      "Kieran Holt",
+      "Cast",
+      "15803D",
+      "F0FDF4",
+      600,
+      600,
+    ),
+  },
+  {
+    name: "Mei Sato",
+    role: "Actor",
+    imageUrl: buildImageUrl("Mei Sato", "Cast", "A21CAF", "FDF4FF", 600, 600),
+  },
+  {
+    name: "Lucas Ray",
+    role: "Director",
+    imageUrl: buildImageUrl(
+      "Lucas Ray",
+      "Director",
+      "111827",
+      "F9FAFB",
+      600,
+      600,
+    ),
+  },
+  {
+    name: "Elena Park",
+    role: "Director",
+    imageUrl: buildImageUrl(
+      "Elena Park",
+      "Director",
+      "1E293B",
+      "F8FAFC",
+      600,
+      600,
+    ),
+  },
+  {
+    name: "Theo Bennett",
+    role: "Director",
+    imageUrl: buildImageUrl(
+      "Theo Bennett",
+      "Director",
+      "3F3F46",
+      "FAFAFA",
+      600,
+      600,
+    ),
+  },
+  {
+    name: "Nadia Karim",
+    role: "Director",
+    imageUrl: buildImageUrl(
+      "Nadia Karim",
+      "Director",
+      "581C87",
+      "FAF5FF",
+      600,
+      600,
+    ),
+  },
+  {
+    name: "Min Thant",
+    role: "Director",
+    imageUrl: buildImageUrl(
+      "Min Thant",
+      "Director",
+      "0F172A",
+      "E2E8F0",
+      600,
+      600,
+    ),
+  },
+  {
+    name: "Olivia Frost",
+    role: "Director",
+    imageUrl: buildImageUrl(
+      "Olivia Frost",
+      "Director",
+      "134E4A",
+      "F0FDFA",
+      600,
+      600,
+    ),
+  },
 ];
 
 const theatreSeeds: SeedTheatre[] = [
@@ -279,7 +422,8 @@ const movieThemes = [
 const movieSeeds: SeedMovie[] = [
   {
     title: "Midnight Runway",
-    description: "A suspended cargo pilot races across a storm corridor to expose a black-market flight network before dawn.",
+    description:
+      "A suspended cargo pilot races across a storm corridor to expose a black-market flight network before dawn.",
     duration: "127",
     language: ["English"],
     subtitle: ["Myanmar"],
@@ -291,7 +435,8 @@ const movieSeeds: SeedMovie[] = [
   },
   {
     title: "Solar Drift",
-    description: "A repair crew stranded beyond lunar orbit discovers their rescue signal is pulling something else toward them.",
+    description:
+      "A repair crew stranded beyond lunar orbit discovers their rescue signal is pulling something else toward them.",
     duration: "134",
     language: ["English", "Myanmar"],
     subtitle: ["English"],
@@ -303,7 +448,8 @@ const movieSeeds: SeedMovie[] = [
   },
   {
     title: "Riverstone Files",
-    description: "An archivist and a detective unlock a decades-old conspiracy buried in a floodplain case file.",
+    description:
+      "An archivist and a detective unlock a decades-old conspiracy buried in a floodplain case file.",
     duration: "118",
     language: ["English"],
     subtitle: ["Myanmar"],
@@ -315,7 +461,8 @@ const movieSeeds: SeedMovie[] = [
   },
   {
     title: "Crimson Monsoon",
-    description: "Two rival journalists cover a cyclone season that keeps drawing them back to the same vanished village.",
+    description:
+      "Two rival journalists cover a cyclone season that keeps drawing them back to the same vanished village.",
     duration: "122",
     language: ["Myanmar", "English"],
     subtitle: ["English"],
@@ -327,7 +474,8 @@ const movieSeeds: SeedMovie[] = [
   },
   {
     title: "Neon Frontier",
-    description: "A courier in a vertical megacity uncovers a memory-smuggling ring hidden inside the transit grid.",
+    description:
+      "A courier in a vertical megacity uncovers a memory-smuggling ring hidden inside the transit grid.",
     duration: "129",
     language: ["English"],
     subtitle: ["Myanmar", "English"],
@@ -339,7 +487,8 @@ const movieSeeds: SeedMovie[] = [
   },
   {
     title: "Paper Lanterns",
-    description: "Three siblings reopen their family theatre and discover the final season their mother never staged.",
+    description:
+      "Three siblings reopen their family theatre and discover the final season their mother never staged.",
     duration: "111",
     language: ["Myanmar"],
     subtitle: ["English"],
@@ -351,7 +500,8 @@ const movieSeeds: SeedMovie[] = [
   },
   {
     title: "Iron Harbor",
-    description: "When a supply port is seized by mercenaries, a retired naval engineer rebuilds the harbor defenses overnight.",
+    description:
+      "When a supply port is seized by mercenaries, a retired naval engineer rebuilds the harbor defenses overnight.",
     duration: "136",
     language: ["English"],
     subtitle: ["English"],
@@ -363,7 +513,8 @@ const movieSeeds: SeedMovie[] = [
   },
   {
     title: "Echoes of Orion",
-    description: "A grieving astronomer begins receiving impossible broadcasts from a colony mission declared lost ten years earlier.",
+    description:
+      "A grieving astronomer begins receiving impossible broadcasts from a colony mission declared lost ten years earlier.",
     duration: "132",
     language: ["English"],
     subtitle: ["Myanmar"],
@@ -375,7 +526,8 @@ const movieSeeds: SeedMovie[] = [
   },
   {
     title: "Velvet Thunder",
-    description: "A motorcycle stunt team agrees to one last stadium tour and uncovers the promoter behind a decades-old sabotage case.",
+    description:
+      "A motorcycle stunt team agrees to one last stadium tour and uncovers the promoter behind a decades-old sabotage case.",
     duration: "124",
     language: ["English"],
     subtitle: ["Myanmar"],
@@ -387,7 +539,8 @@ const movieSeeds: SeedMovie[] = [
   },
   {
     title: "The Last Meridian",
-    description: "A cartographer mapping disputed borders learns the final line on her map could restart a frozen war.",
+    description:
+      "A cartographer mapping disputed borders learns the final line on her map could restart a frozen war.",
     duration: "116",
     language: ["English", "Myanmar"],
     subtitle: ["English"],
@@ -399,7 +552,8 @@ const movieSeeds: SeedMovie[] = [
   },
   {
     title: "Whisper Code",
-    description: "A linguist tracing voice-print malware realizes the infected phrases are being broadcast through public announcements.",
+    description:
+      "A linguist tracing voice-print malware realizes the infected phrases are being broadcast through public announcements.",
     duration: "121",
     language: ["English"],
     subtitle: ["Myanmar"],
@@ -411,7 +565,8 @@ const movieSeeds: SeedMovie[] = [
   },
   {
     title: "Kingdom Below",
-    description: "An exiled heir descends beneath a ruined capital to reclaim a throne guarded by living stone.",
+    description:
+      "An exiled heir descends beneath a ruined capital to reclaim a throne guarded by living stone.",
     duration: "140",
     language: ["English"],
     subtitle: ["English"],
@@ -423,7 +578,8 @@ const movieSeeds: SeedMovie[] = [
   },
   {
     title: "Glass Horizon",
-    description: "An architect rebuilding a cyclone-devastated waterfront falls for the radio host coordinating the entire district.",
+    description:
+      "An architect rebuilding a cyclone-devastated waterfront falls for the radio host coordinating the entire district.",
     duration: "109",
     language: ["Myanmar", "English"],
     subtitle: ["English"],
@@ -435,7 +591,8 @@ const movieSeeds: SeedMovie[] = [
   },
   {
     title: "Atlas in Bloom",
-    description: "A young illustrator and a runaway delivery robot sketch their way across a citywide flower festival.",
+    description:
+      "A young illustrator and a runaway delivery robot sketch their way across a citywide flower festival.",
     duration: "102",
     language: ["Myanmar", "English"],
     subtitle: ["English"],
@@ -447,7 +604,8 @@ const movieSeeds: SeedMovie[] = [
   },
   {
     title: "Starlight Protocol",
-    description: "A diplomatic convoy carrying a dormant defense AI vanishes hours before the first inter-orbital treaty signing.",
+    description:
+      "A diplomatic convoy carrying a dormant defense AI vanishes hours before the first inter-orbital treaty signing.",
     duration: "128",
     language: ["English"],
     subtitle: ["Myanmar"],
@@ -459,7 +617,8 @@ const movieSeeds: SeedMovie[] = [
   },
   {
     title: "Moon over Mandalay",
-    description: "A returning concert pianist reconnects with her first love while preparing a once-in-a-generation riverside performance.",
+    description:
+      "A returning concert pianist reconnects with her first love while preparing a once-in-a-generation riverside performance.",
     duration: "114",
     language: ["Myanmar"],
     subtitle: ["English"],
@@ -471,7 +630,8 @@ const movieSeeds: SeedMovie[] = [
   },
   {
     title: "The Fifth Ember",
-    description: "A rebel blacksmith discovers the last missing ember needed to reawaken a kingdom's sealed guardians.",
+    description:
+      "A rebel blacksmith discovers the last missing ember needed to reawaken a kingdom's sealed guardians.",
     duration: "133",
     language: ["English"],
     subtitle: ["English"],
@@ -483,7 +643,8 @@ const movieSeeds: SeedMovie[] = [
   },
   {
     title: "Harbor of Kings",
-    description: "A salvager chasing a royal shipwreck finds a living map carved into the harbor walls beneath the tide line.",
+    description:
+      "A salvager chasing a royal shipwreck finds a living map carved into the harbor walls beneath the tide line.",
     duration: "126",
     language: ["English"],
     subtitle: ["Myanmar"],
@@ -495,7 +656,8 @@ const movieSeeds: SeedMovie[] = [
   },
   {
     title: "Saffron Skies",
-    description: "A teenage kite maker and her grandfather build a flying lantern machine for the region's biggest harvest parade.",
+    description:
+      "A teenage kite maker and her grandfather build a flying lantern machine for the region's biggest harvest parade.",
     duration: "100",
     language: ["Myanmar", "English"],
     subtitle: ["English"],
@@ -507,7 +669,8 @@ const movieSeeds: SeedMovie[] = [
   },
   {
     title: "Silent Frequency",
-    description: "An emergency-radio engineer realizes a pirate station is predicting disasters minutes before they happen.",
+    description:
+      "An emergency-radio engineer realizes a pirate station is predicting disasters minutes before they happen.",
     duration: "119",
     language: ["English"],
     subtitle: ["Myanmar"],
@@ -551,6 +714,7 @@ async function main() {
       scheduleRepo,
       scheduleSeatTypeRepo,
     );
+    console.log("seeding started...");
 
     const movieMap = await seedMovies(movieRepo, imageRepo, genreMap, castMap);
     await seedSchedules(
@@ -907,7 +1071,9 @@ async function seedMovies(
     movie.updatedAt = movie.id ? new Date() : null;
     movie.releaseDate =
       seed.statusGroup === "comingSoon"
-        ? dayjs().add(7 + index, "day").toDate()
+        ? dayjs()
+            .add(7 + index, "day")
+            .toDate()
         : dayjs().toDate();
     movie.status =
       seed.statusGroup === "comingSoon"
@@ -915,8 +1081,18 @@ async function seedMovies(
         : MovieStatus.ticketAvailable;
 
     movie = await movieRepo.save(movie);
-    await syncMovieRelations(movieRepo, movie.id, "genres", genres.map((genre) => genre.id));
-    await syncMovieRelations(movieRepo, movie.id, "casts", casts.map((cast) => cast.id));
+    await syncMovieRelations(
+      movieRepo,
+      movie.id,
+      "genres",
+      genres.map((genre) => genre.id),
+    );
+    await syncMovieRelations(
+      movieRepo,
+      movie.id,
+      "casts",
+      casts.map((cast) => cast.id),
+    );
     map.set(seed.title, movie);
   }
 
@@ -998,7 +1174,10 @@ async function seedSchedules(
         screenReferences,
         usedSlots,
         [0],
-        [index % screenReferences.length, (index + 1) % screenReferences.length],
+        [
+          index % screenReferences.length,
+          (index + 1) % screenReferences.length,
+        ],
         buildTodayTimeCandidates(index),
         getScheduleMultiplier(movieSeed.experience),
       ),
@@ -1006,7 +1185,10 @@ async function seedSchedules(
         screenReferences,
         usedSlots,
         [1 + (index % 2), 2 + (index % 3)],
-        [(index + 2) % screenReferences.length, (index + 3) % screenReferences.length],
+        [
+          (index + 2) % screenReferences.length,
+          (index + 3) % screenReferences.length,
+        ],
         ["13:00:00", "16:15:00", "19:30:00", "21:45:00"],
         getScheduleMultiplier(movieSeed.experience),
       ),
@@ -1035,7 +1217,10 @@ async function seedSchedules(
         screenReferences,
         usedSlots,
         [1 + (index % 3), 2 + (index % 4)],
-        [index % screenReferences.length, (index + 4) % screenReferences.length],
+        [
+          index % screenReferences.length,
+          (index + 4) % screenReferences.length,
+        ],
         ["10:30:00", "13:45:00", "17:00:00", "20:15:00"],
         getScheduleMultiplier(movieSeed.experience),
       ),
@@ -1043,7 +1228,10 @@ async function seedSchedules(
         screenReferences,
         usedSlots,
         [4 + (index % 4), 6 + (index % 3)],
-        [(index + 2) % screenReferences.length, (index + 5) % screenReferences.length],
+        [
+          (index + 2) % screenReferences.length,
+          (index + 5) % screenReferences.length,
+        ],
         ["11:15:00", "14:30:00", "18:00:00", "21:00:00"],
         getScheduleMultiplier(movieSeed.experience),
       ),
@@ -1078,7 +1266,11 @@ async function persistSchedulesForMovie(
       multiplier: plan.multiplier,
       availableSeats: plan.screen.capacity,
       bookedSeats: [],
-      status: resolveScheduleStatus(plan.showDate, plan.showTime, movie.duration),
+      status: resolveScheduleStatus(
+        plan.showDate,
+        plan.showTime,
+        movie.duration,
+      ),
       language: movieSeed.language[0],
       subtitle: movieSeed.subtitle[0] ?? "",
     });
@@ -1164,7 +1356,9 @@ async function refreshMovieStatuses(movieRepo: Repository<Movie>) {
       .filter((movie) => movie.statusGroup === "comingSoon")
       .map((movie, index) => [
         movie.title,
-        dayjs().add(14 + index, "day").toDate(),
+        dayjs()
+          .add(14 + index, "day")
+          .toDate(),
       ]),
   );
 
@@ -1176,7 +1370,8 @@ async function refreshMovieStatuses(movieRepo: Repository<Movie>) {
       movie.releaseDate = earliestShow.toDate();
     } else {
       movie.releaseDate =
-        releaseDateOverrides.get(movie.title) ?? dayjs().add(21, "day").toDate();
+        releaseDateOverrides.get(movie.title) ??
+        dayjs().add(21, "day").toDate();
     }
 
     movie.status = resolveMovieStatus(movie);
@@ -1274,7 +1469,9 @@ function allocateSlot(
     }
   }
 
-  throw new Error("Unable to allocate a unique schedule slot for the seeded dataset.");
+  throw new Error(
+    "Unable to allocate a unique schedule slot for the seeded dataset.",
+  );
 }
 
 function buildSeatAssignments(disabledSeats: string[]) {
