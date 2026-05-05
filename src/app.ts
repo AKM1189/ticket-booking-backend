@@ -56,10 +56,10 @@ const startServer = async () => {
 
   const app = express();
 
-  const allowedOrigins =
-    process.env.NODE_ENV === "production"
-      ? [process.env.PRODUCTION_FRONTEND_URL!]
-      : ["http://localhost:5178"];
+  const allowedOrigins = [
+    "http://localhost:5178",
+    process.env.PRODUCTION_FRONTEND_URL!,
+  ];
 
   app.use(
     cors({
