@@ -7,9 +7,7 @@ let io;
 const initSocket = (server) => {
     io = new socket_io_1.Server(server, {
         cors: {
-            origin: process.env.NODE_ENV === "production"
-                ? [process.env.PRODUCTION_FRONTEND_URL]
-                : ["http://localhost:5178"],
+            origin: ["http://localhost:5178", process.env.PRODUCTION_FRONTEND_URL],
             credentials: true,
         },
     });

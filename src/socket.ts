@@ -7,10 +7,7 @@ let io: Server;
 export const initSocket = (server: HttpServer) => {
   io = new Server(server, {
     cors: {
-      origin:
-        process.env.NODE_ENV === "production"
-          ? [process.env.PRODUCTION_FRONTEND_URL]
-          : ["http://localhost:5178"],
+      origin: ["http://localhost:5178", process.env.PRODUCTION_FRONTEND_URL!],
       credentials: true,
     },
   });
