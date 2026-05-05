@@ -38,11 +38,12 @@ const startServer = async () => {
     console.log("🔌 Initializing database...");
     await (0, db_1.initializeDB)();
     const app = (0, express_1.default)();
-    const allowedOrigins = process.env.NODE_ENV === "production"
-        ? [process.env.PRODUCTION_FRONTEND_URL]
-        : ["http://localhost:5178"];
+    const allowedOrigins = [
+        "http://localhost:5178",
+        process.env.PRODUCTION_FRONTEND_URL,
+    ];
     app.use((0, cors_1.default)({
-        origin: allowedOrigins,
+        origin: true,
         credentials: true,
     }));
     app.use(express_1.default.json());
